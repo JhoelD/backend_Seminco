@@ -1,4 +1,4 @@
-const Empresa = require('../models/Empresa');
+const Empresa = require('../../src/models/Empresa');
 
 const empresaController = {
     getAll: async (req, res) => {

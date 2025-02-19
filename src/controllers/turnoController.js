@@ -1,4 +1,4 @@
-const Turno = require('../models/Turno');
+const Turno = require('../../src/models/Turno');
 
 const turnoController = {
     getAll: async (req, res) => {

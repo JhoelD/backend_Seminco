@@ -1,4 +1,4 @@
-const FormatoPlanMineral = require('../models/FormatoPlanMineral');
+const FormatoPlanMineral = require('../../src/models/formatoPlanMineral');
 const Taladro = require('../models/Taladro');
 
 // Obtener todos los registros

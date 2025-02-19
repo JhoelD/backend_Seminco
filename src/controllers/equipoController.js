@@ -1,4 +1,4 @@
-const Equipo = require('../models/Equipo');
+const Equipo = require('../../src/models/Equipo');
 
 const equipoController = {
     getAll: async (req, res) => {
