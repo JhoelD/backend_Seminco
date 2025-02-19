@@ -105,3 +105,24 @@ exports.eliminarUsuario = [verificarToken, async (req, res) => {
         res.status(500).json({ error: 'Error al eliminar el usuario' });
     }
 }];
+
+
+exports.obtenerPerfil = [verificarToken, async (req, res) => {
+    try {
+        const { id } = req.user; // Extrae el ID del usuario desde el token
+
+        const [rows] = await db.query(
+            'SELECT id, codigo_dni, apellidos, nombres, cargo, empresa, guardia, autorizado_equipo, correo, password FROM usuarios WHERE id = ?', 
+            [id]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+
+        res.status(200).json(rows[0]); // Devuelve los datos del usuario, incluyendo el hash de la contraseña
+    } catch (error) {
+        console.error('Error al obtener perfil del usuario:', error.message);
+        res.status(500).json({ error: 'Error al obtener perfil del usuario' });
+    }
+}];

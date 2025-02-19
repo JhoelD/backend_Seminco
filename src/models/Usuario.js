@@ -8,7 +8,7 @@ const Usuario = sequelize.define('Usuario', {
         autoIncrement: true
     },
     codigo_dni: {  
-        type: DataTypes.STRING,
+        type: DataTypes.STRING, 
         allowNull: false
     },
     apellidos: {  
