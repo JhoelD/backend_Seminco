@@ -24,19 +24,20 @@ exports.getEstadoById = async (req, res) => {
   }
 };
 
-
+// Crear un nuevo estado
 exports.createEstado = async (req, res) => {
   try {
     const { 
       estado_principal, 
       codigo, 
       tipo_estado, 
-      categoria 
+      categoria, 
+      proceso // Nuevo campo agregado
     } = req.body;
 
     const [result] = await db.query(
-      'INSERT INTO estados (estado_principal, codigo, tipo_estado, categoria) VALUES (?, ?, ?, ?)',
-      [estado_principal, codigo, tipo_estado, categoria]
+      'INSERT INTO estados (estado_principal, codigo, tipo_estado, categoria, proceso) VALUES (?, ?, ?, ?, ?)',
+      [estado_principal, codigo, tipo_estado, categoria, proceso]
     );
 
     res.status(201).json({
@@ -44,7 +45,8 @@ exports.createEstado = async (req, res) => {
       estado_principal,
       codigo,
       tipo_estado,
-      categoria
+      categoria,
+      proceso
     });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -54,7 +56,7 @@ exports.createEstado = async (req, res) => {
 // Actualizar un estado por ID
 exports.updateEstado = async (req, res) => {
   try {
-    const { estado_principal, codigo, tipo_estado, categoria } = req.body;
+    const { estado_principal, codigo, tipo_estado, categoria, proceso } = req.body; // Agregar el campo proceso
     const { id } = req.params;
 
     // Verificar si el estado existe
@@ -65,16 +67,15 @@ exports.updateEstado = async (req, res) => {
 
     // Actualizar el estado con los campos correctos
     await db.query(
-      'UPDATE estados SET estado_principal = ?, codigo = ?, tipo_estado = ?, categoria = ? WHERE id = ?',
-      [estado_principal, codigo, tipo_estado, categoria, id]
+      'UPDATE estados SET estado_principal = ?, codigo = ?, tipo_estado = ?, categoria = ?, proceso = ? WHERE id = ?',
+      [estado_principal, codigo, tipo_estado, categoria, proceso, id]
     );
 
-    res.json({ id, estado_principal, codigo, tipo_estado, categoria });
+    res.json({ id, estado_principal, codigo, tipo_estado, categoria, proceso });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
-
 
 // Eliminar un estado por ID
 exports.deleteEstado = async (req, res) => {

@@ -72,16 +72,26 @@ exports.actualizarUsuario = [verificarToken, async (req, res) => {
             return res.status(404).json({ error: 'Usuario no encontrado' });
         }
 
-        let hashedPassword = password;
+        let query = `
+            UPDATE usuarios 
+            SET codigo_dni = ?, apellidos = ?, nombres = ?, cargo = ?, empresa = ?, 
+                guardia = ?, autorizado_equipo = ?, correo = ?, updatedAt = NOW()
+        `;
+        const queryParams = [codigo_dni, apellidos, nombres, cargo, empresa, guardia, autorizado_equipo, correo];
+
+        // Si se envía una nueva contraseña, la encriptamos y la agregamos a la consulta
         if (password) {
             const salt = await bcrypt.genSalt(10);
-            hashedPassword = await bcrypt.hash(password, salt);
+            const hashedPassword = await bcrypt.hash(password, salt);
+            query += `, password = ?`;
+            queryParams.push(hashedPassword);
         }
 
-        await db.query(
-            'UPDATE usuarios SET codigo_dni = ?, apellidos = ?, nombres = ?, cargo = ?, empresa = ?, guardia = ?, autorizado_equipo = ?, correo = ?, password = ? WHERE id = ?',
-            [codigo_dni, apellidos, nombres, cargo, empresa, guardia, autorizado_equipo, correo, hashedPassword, id]
-        );
+        query += ` WHERE id = ?`;
+        queryParams.push(id);
+
+        await db.query(query, queryParams);
+
         res.status(200).json({ message: 'Usuario actualizado exitosamente' });
     } catch (error) {
         console.error('Error al actualizar el usuario:', error.message);
