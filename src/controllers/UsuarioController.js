@@ -48,9 +48,9 @@ exports.crearUsuario = [
 
             // Inserta el usuario
             const [result] = await db.query(
-                'INSERT INTO usuarios (codigo_dni, apellidos, nombres, cargo, empresa, guardia, autorizado_equipo, correo, password, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())',
+                'INSERT INTO usuarios (codigo_dni, apellidos, nombres, cargo, empresa, guardia, autorizado_equipo, correo, password, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())',
                 [codigo_dni, apellidos, nombres, cargo, empresa, guardia, autorizado_equipo, correo, hashedPassword]
-            );            
+            );                        
 
             res.status(201).json({ message: 'Usuario creado exitosamente' });
         } catch (error) {
