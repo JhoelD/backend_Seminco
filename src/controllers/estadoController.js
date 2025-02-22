@@ -4,12 +4,12 @@ const db = require('../config/db'); // Asegúrate de que `db.js` esté configura
 exports.getAllEstados = async (req, res) => {
   try {
     const [estados] = await db.query('SELECT * FROM estados');
-    console.log("Datos obtenidos de la consulta:", estados); // Muestra los datos en la consola
     res.json(estados);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 // Obtener un estado por ID
 exports.getEstadoById = async (req, res) => {
