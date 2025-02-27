@@ -21,24 +21,32 @@ const Usuario = sequelize.define('Usuario', {
     },
     cargo: {  
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true  // Ahora puede ser NULL
     },
     empresa: {  
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true  // Ahora puede ser NULL
     },
     guardia: {  
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true  // Ahora puede ser NULL
     },
     autorizado_equipo: {  
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: true  // Ahora puede ser NULL
+    },
+    area: {  
+        type: DataTypes.STRING,
+        allowNull: true  // Ahora puede ser NULL
+    },
+    clasificacion: {  
+        type: DataTypes.STRING,
+        allowNull: true  // Ahora puede ser NULL
     },
     correo: {  
         type: DataTypes.STRING,
-        allowNull: false,
-        unique: true, 
+        allowNull: true,  // Puede ser NULL si se crea desde el Excel sin correo
+        unique: true,
         validate: {
             isEmail: {
                 msg: 'Debe ingresar un correo electrónico válido.'
@@ -49,7 +57,6 @@ const Usuario = sequelize.define('Usuario', {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
-            
             is: {
                 args: /^(?=.*[a-zA-Z0-9@#$%^&+=]).{6,}$/, 
                 msg: 'La contraseña debe tener al menos 6 caracteres, incluyendo letras, números y símbolos.'
@@ -58,7 +65,7 @@ const Usuario = sequelize.define('Usuario', {
     }
 }, {
     tableName: 'usuarios',  
-    timestamps: true,        
+    timestamps: true        
 });
 
 module.exports = Usuario;

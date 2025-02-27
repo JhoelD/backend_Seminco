@@ -33,24 +33,53 @@ exports.obtenerUsuarioPorId = [verificarToken, async (req, res) => {
 exports.crearUsuario = [
     verificarToken, // Asegura que se está enviando un token válido
     async (req, res) => {
-        const { codigo_dni, apellidos, nombres, cargo, empresa, guardia, autorizado_equipo, correo, password } = req.body;
-
         try {
-            // Verifica si el usuario ya existe por correo o DNI en lugar de contar toda la tabla
-            const [existingUsers] = await db.query('SELECT * FROM usuarios WHERE correo = ? OR codigo_dni = ?', [correo, codigo_dni]);
-            if (existingUsers.length > 0) {
-                return res.status(400).json({ error: 'El usuario ya existe' });
+            const {
+                codigo_dni,
+                apellidos,
+                nombres,
+                cargo = null,
+                area = null,
+                clasificacion = null,
+                empresa = null,
+                guardia = null,
+                autorizado_equipo = null,
+                correo = null,
+                password
+            } = req.body;
+
+            // Verifica si el usuario ya existe por DNI
+            const [existingUser] = await db.query(
+                'SELECT * FROM usuarios WHERE codigo_dni = ?',
+                [codigo_dni]
+            );
+
+            if (existingUser.length > 0) {
+                return res.status(400).json({ error: 'El usuario ya existe con este DNI' });
+            }
+
+            // Si se envió un correo, verifica que no esté en uso
+            if (correo) {
+                const [existingEmail] = await db.query(
+                    'SELECT * FROM usuarios WHERE correo = ?',
+                    [correo]
+                );
+                if (existingEmail.length > 0) {
+                    return res.status(400).json({ error: 'El correo ya está en uso' });
+                }
             }
 
             // Encripta la contraseña
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
 
-            // Inserta el usuario
+            // Inserta el usuario en la base de datos
             const [result] = await db.query(
-                'INSERT INTO usuarios (codigo_dni, apellidos, nombres, cargo, empresa, guardia, autorizado_equipo, correo, password, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())',
-                [codigo_dni, apellidos, nombres, cargo, empresa, guardia, autorizado_equipo, correo, hashedPassword]
-            );                        
+                `INSERT INTO usuarios 
+                (codigo_dni, apellidos, nombres, cargo, area, clasificacion, empresa, guardia, autorizado_equipo, correo, password, createdAt, updatedAt) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+                [codigo_dni, apellidos, nombres, cargo, area, clasificacion, empresa, guardia, autorizado_equipo, correo, hashedPassword]
+            );
 
             res.status(201).json({ message: 'Usuario creado exitosamente' });
         } catch (error) {
@@ -59,6 +88,7 @@ exports.crearUsuario = [
         }
     }
 ];
+
 
 
 
