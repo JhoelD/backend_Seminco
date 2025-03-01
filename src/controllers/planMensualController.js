@@ -1,4 +1,4 @@
-const PlanMensual = require('../models/PlanMensual');
+const PlanMensual = require('../models/TipoPerforacion');
 
 // Obtener todos los registros
 const getAllPlanMensual = async (req, res) => {

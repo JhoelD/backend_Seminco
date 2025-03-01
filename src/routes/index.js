@@ -10,7 +10,7 @@ const equipoRoutes = require('../routes/api/equipoRoutes');
 const turnoRoutes = require('../routes/api/turnoRoutes');
 const estadoRoutes = require('../routes/api/estadoRoutes');
 const PlamMensual = require('../routes/api/planMensualRoutes');
-
+const TipoPerfpo = require('../routes/api/tipoPerforacionRoutes');
 
 router.use('/usuarios', usuariosRoutes);  
 router.use('/auth', authRoutes);  
@@ -20,5 +20,6 @@ router.use('/Equipo', equipoRoutes);
 router.use('/Turno', turnoRoutes);  
 router.use('/estado', estadoRoutes);  
 router.use('/PlamMensual', PlamMensual);  
+router.use('/TipoPerfpo', TipoPerfpo);  
 
 module.exports = router;
