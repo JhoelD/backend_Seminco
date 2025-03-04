@@ -27,12 +27,12 @@ const PlanMensual = sequelize.define('PlanMensual', {
     // Campos 1A - 28B
     ...Object.fromEntries(
         Array.from({ length: 28 }, (_, i) => [
-            `col_${i + 1}A`, { type: DataTypes.FLOAT, allowNull: true }
+            `col_${i + 1}A`, { type: DataTypes.STRING, allowNull: true }
         ])
     ),
     ...Object.fromEntries(
         Array.from({ length: 28 }, (_, i) => [
-            `col_${i + 1}B`, { type: DataTypes.FLOAT, allowNull: true }
+            `col_${i + 1}B`, { type: DataTypes.STRING, allowNull: true }
         ])
     )
 }, {

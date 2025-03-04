@@ -18,3 +18,4 @@ const Equipo = sequelize.define('Equipo', {
 });
 
 module.exports = Equipo;
+ 

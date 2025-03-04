@@ -3,7 +3,7 @@ const Equipo = require('../../src/models/Equipo');
 const equipoController = {
     getAll: async (req, res) => {
         try {
-            const equipos = await Equipo.findAll();
+            const equipos = await Equipo.findAll(); 
             res.json(equipos);
         } catch (error) {
             res.status(500).json({ error: 'Error al obtener los equipos' });
