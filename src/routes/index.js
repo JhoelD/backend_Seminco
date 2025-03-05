@@ -13,6 +13,8 @@ const PlamMensual = require('../routes/api/planMensualRoutes');
 const TipoPerfpo = require('../routes/api/tipoPerforacionRoutes');
 const PlanMetraje = require('../routes/api/planMetrajeRoutes');
 const PlanProduccion = require('../routes/api/planProduccionRoutes');
+const Explosivo = require('../routes/api/explosivoRoutes');
+const Accesorio = require('../routes/api/accesorioRoutes');
 
 router.use('/usuarios', usuariosRoutes);  
 router.use('/auth', authRoutes);  
@@ -25,5 +27,7 @@ router.use('/PlamMensual', PlamMensual);
 router.use('/TipoPerfpo', TipoPerfpo);  
 router.use('/PlanMetraje', PlanMetraje);  
 router.use('/PlanProduccion', PlanProduccion); 
+router.use('/Explosivos', Explosivo);  
+router.use('/Accesorios', Accesorio); 
 
 module.exports = router;
