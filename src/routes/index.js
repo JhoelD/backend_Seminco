@@ -15,6 +15,8 @@ const PlanMetraje = require('../routes/api/planMetrajeRoutes');
 const PlanProduccion = require('../routes/api/planProduccionRoutes');
 const Explosivo = require('../routes/api/explosivoRoutes');
 const Accesorio = require('../routes/api/accesorioRoutes');
+const ExploUni = require('../routes/api/explisivosUniRouter');
+const destinatarioCorreoRoutes = require('../routes/api/destinatarioCorreoRoutes');
 
 router.use('/usuarios', usuariosRoutes);  
 router.use('/auth', authRoutes);  
@@ -29,5 +31,7 @@ router.use('/PlanMetraje', PlanMetraje);
 router.use('/PlanProduccion', PlanProduccion); 
 router.use('/Explosivos', Explosivo);  
 router.use('/Accesorios', Accesorio); 
+router.use('/Explo-uni', ExploUni); 
+router.use('/Despacho-Destinatario', destinatarioCorreoRoutes); 
 
 module.exports = router;

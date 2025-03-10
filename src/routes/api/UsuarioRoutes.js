@@ -14,6 +14,7 @@ router.delete('/usuarios/:id', usuarioController.eliminarUsuario);
 
 router.get('/perfil', usuarioController.obtenerPerfil);
 
+router.put('/usuarios/:id/firma', usuarioController.actualizarFirma);
 
 module.exports = router;
  

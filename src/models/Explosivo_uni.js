@@ -1,0 +1,18 @@
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/sequelize');
+
+const Explisivos_uni = sequelize.define('Explisivos_uni', {
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    },
+    dato: {
+        type: DataTypes.FLOAT,
+        allowNull: false
+    }
+}, {
+    tableName: 'Explisivos_uni',
+    timestamps: false
+});
+module.exports = Explisivos_uni;

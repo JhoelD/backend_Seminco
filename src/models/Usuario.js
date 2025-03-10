@@ -62,6 +62,10 @@ const Usuario = sequelize.define('Usuario', {
                 msg: 'La contraseña debe tener al menos 6 caracteres, incluyendo letras, números y símbolos.'
             }
         }
+    },
+    firma_imagen: {  
+        type: DataTypes.STRING,
+        allowNull: true  // Puede ser NULL si el usuario no tiene una imagen de firma
     }
 }, {
     tableName: 'usuarios',  

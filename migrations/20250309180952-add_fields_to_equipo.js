@@ -17,7 +17,8 @@ const Equipo = sequelize.define('Equipo', {
     },
     codigo: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
+        unique: true
     },
     marca: {
         type: DataTypes.STRING,
@@ -29,23 +30,24 @@ const Equipo = sequelize.define('Equipo', {
     },
     serie: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
+        unique: true
     },
     anioFabricacion: {
         type: DataTypes.INTEGER,
         allowNull: false
     },
     fechaIngreso: {
-        type: DataTypes.DATE,
-        allowNull: false
+        type: DataTypes.DATEONLY, // ⚠️ Cambiado a `DATEONLY` porque solo necesitas la fecha, no la hora.
+        allowNull: true // ⚠️ Permitir `NULL` en caso de datos faltantes
     },
     capacidadYd3: {
         type: DataTypes.FLOAT,
-        allowNull: true 
+        allowNull: true // ⚠️ Hacer opcional
     },
     capacidadM3: {
         type: DataTypes.FLOAT,
-        allowNull: true 
+        allowNull: true // ⚠️ Hacer opcional
     }
 }, {
     tableName: 'equipos',
