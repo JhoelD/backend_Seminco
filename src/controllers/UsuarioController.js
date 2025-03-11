@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const db = require('../config/db');
 const verificarToken = require('../middleware/auth');
-const upload = require('../middleware/upload');
+const upload = require('../config/upload');
 
 exports.obtenerUsuarios = [verificarToken, async (req, res) => {
     try {
@@ -32,7 +32,7 @@ exports.obtenerUsuarioPorId = [verificarToken, async (req, res) => {
 
 exports.crearUsuario = [
     verificarToken,
-    upload.single('firma'),
+    upload.single('firma'), // Usa Cloudinary
     async (req, res) => {
         try {
             const {
@@ -41,7 +41,7 @@ exports.crearUsuario = [
                 autorizado_equipo = null, correo = null, password
             } = req.body;
 
-            const firma = req.file ? `/firmas/${req.file.filename}` : null;
+            const firma = req.file ? req.file.path : null; // URL de Cloudinary
 
             const [existingUser] = await db.query('SELECT * FROM usuarios WHERE codigo_dni = ?', [codigo_dni]);
             if (existingUser.length > 0) return res.status(400).json({ error: 'El usuario ya existe con este DNI' });
@@ -68,13 +68,14 @@ exports.crearUsuario = [
     }
 ];
 
+
 exports.actualizarUsuario = [
     verificarToken,
     upload.single('firma'),
     async (req, res) => {
         const { id } = req.params;
         const { codigo_dni, apellidos, nombres, cargo, empresa, guardia, autorizado_equipo, correo, password } = req.body;
-        const firma = req.file ? `/firmas/${req.file.filename}` : null;
+        const firma = req.file ? req.file.path : null; // URL de Cloudinary
 
         try {
             const [rows] = await db.query('SELECT * FROM usuarios WHERE id = ?', [id]);
@@ -84,13 +85,13 @@ exports.actualizarUsuario = [
             const queryParams = [codigo_dni, apellidos, nombres, cargo, empresa, guardia, autorizado_equipo, correo];
 
             if (firma) {
-                // **Eliminar firma anterior**
+                // **Eliminar la firma anterior de Cloudinary**
                 if (rows[0].firma) {
-                    const firmaPath = path.join(__dirname, '../config' + rows[0].firma);
-                    if (fs.existsSync(firmaPath)) {
-                        fs.unlinkSync(firmaPath);
-                    }
+                    const firmaUrl = rows[0].firma;
+                    const publicId = firmaUrl.split('/').pop().split('.')[0]; // Obtener el public_id de Cloudinary
+                    await cloudinary.uploader.destroy(`firmas/${publicId}`);
                 }
+
                 query += `, firma = ?`;
                 queryParams.push(firma);
             }
@@ -115,18 +116,18 @@ exports.actualizarUsuario = [
     }
 ];
 
+
 exports.eliminarUsuario = [verificarToken, async (req, res) => {
     const { id } = req.params;
     try {
         const [rows] = await db.query('SELECT * FROM usuarios WHERE id = ?', [id]);
         if (rows.length === 0) return res.status(404).json({ error: 'Usuario no encontrado' });
 
-        // **Eliminar firma asociada**
+        // **Eliminar firma en Cloudinary**
         if (rows[0].firma) {
-            const firmaPath = path.join(__dirname, '../config' + rows[0].firma);
-            if (fs.existsSync(firmaPath)) {
-                fs.unlinkSync(firmaPath);
-            }
+            const firmaUrl = rows[0].firma;
+            const publicId = firmaUrl.split('/').pop().split('.')[0]; // Obtener el public_id de Cloudinary
+            await cloudinary.uploader.destroy(`firmas/${publicId}`);
         }
 
         await db.query('DELETE FROM usuarios WHERE id = ?', [id]);
@@ -136,6 +137,7 @@ exports.eliminarUsuario = [verificarToken, async (req, res) => {
         res.status(500).json({ error: 'Error al eliminar el usuario' });
     }
 }];
+
 
 exports.obtenerPerfil = [verificarToken, async (req, res) => {
     try {
@@ -163,30 +165,53 @@ exports.actualizarFirma = [
         const { id } = req.params;
 
         try {
+            console.log(`Iniciando actualización de firma para el usuario con ID: ${id}`);
+
             // Verificar si el usuario existe
             const [rows] = await db.query('SELECT * FROM usuarios WHERE id = ?', [id]);
             if (rows.length === 0) {
+                console.warn(`Usuario con ID ${id} no encontrado.`);
                 return res.status(404).json({ error: 'Usuario no encontrado' });
             }
 
             // Verificar si se subió un archivo
             if (!req.file) {
+                console.warn('No se subió ninguna firma.');
                 return res.status(400).json({ error: 'Debe subir una firma' });
             }
 
-            const firma = `/uploads/firmas/${req.file.filename}`; // Ruta de la firma
+            console.log('Archivo subido:', req.file);
 
-            // Actualizar solo la firma en la base de datos
+            const firmaUrl = req.file.path; // URL de Cloudinary
+            console.log(`Nueva firma subida: ${firmaUrl}`);
+
+            // **Eliminar la firma anterior en Cloudinary**
+            if (rows[0].firma) {
+                try {
+                    const urlPartes = rows[0].firma.split('/');
+                    const publicIdConExt = urlPartes.pop(); // Última parte de la URL (puede incluir extensión)
+                    const publicId = publicIdConExt.split('.')[0]; // Eliminar la extensión
+                    
+                    console.log(`Eliminando firma anterior con public_id: firmas/${publicId}`);
+                    await cloudinary.uploader.destroy(`firmas/${publicId}`);
+                    console.log('Firma anterior eliminada correctamente.');
+                } catch (err) {
+                    console.error('Error al eliminar la firma anterior:', err.message);
+                }
+            }
+
+            // **Actualizar la firma en la base de datos**
             await db.query(
                 'UPDATE usuarios SET firma = ?, updatedAt = NOW() WHERE id = ?',
-                [firma, id]
+                [firmaUrl, id]
             );
 
-            res.status(200).json({ message: 'Firma actualizada exitosamente', firma });
+            console.log('Firma actualizada correctamente en la base de datos.');
+
+            res.status(200).json({ message: 'Firma actualizada exitosamente', firma: firmaUrl });
         } catch (error) {
-            console.error('Error al actualizar la firma:', error.message);
+            console.error('Error al actualizar la firma:', error);
             res.status(500).json({ error: 'Error al actualizar la firma' });
         }
     }
 ];
-

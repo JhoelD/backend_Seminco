@@ -9,8 +9,6 @@ app.use(cors());
 
 app.use(bodyParser.json());
 
-app.use('/uploads/firmas', express.static(path.join(__dirname, '../src/config/firmas')));
-
 
 app.use('/api', routes);
 
