@@ -67,10 +67,31 @@ const deletePlanMensual = async (req, res) => {
     }
 };
 
+const getPlanMensualByYearAndMonth = async (req, res) => {
+    try {
+        const { anio, mes } = req.params; // Obtener los parámetros desde la URL
+        const planes = await PlanMensual.findAll({
+            where: {
+                anio: anio,
+                mes: mes
+            }
+        });
+  
+        if (!planes || planes.length === 0) {
+            return res.status(404).json({ message: 'Planes mensuales no encontrados' });
+        }
+  
+        res.status(200).json(planes);
+    } catch (error) {
+        res.status(500).json({ message: 'Error al obtener los planes mensuales', error });
+    }
+  };
+
 module.exports = {
     getAllPlanMensual,
     getPlanMensualById,
     createPlanMensual,
     updatePlanMensual,
-    deletePlanMensual
+    deletePlanMensual,
+    getPlanMensualByYearAndMonth
 };

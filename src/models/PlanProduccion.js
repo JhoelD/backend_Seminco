@@ -4,6 +4,7 @@ const sequelize = require('../config/sequelize');
 const PlanProduccion = sequelize.define(
   "PlanProduccion",
   {
+    anio: { type: DataTypes.INTEGER, allowNull: true },
     mes: { type: DataTypes.STRING(20), allowNull: false },
     semana: { type: DataTypes.STRING(20), allowNull: false },
     mina: { type: DataTypes.STRING(50), allowNull: false },
@@ -31,6 +32,11 @@ const PlanProduccion = sequelize.define(
     vpt_final: { type: DataTypes.FLOAT, allowNull: true },
     cut_off_1: { type: DataTypes.FLOAT, allowNull: true },
     cut_off_2: { type: DataTypes.FLOAT, allowNull: true },
+    programado: {
+      type: DataTypes.ENUM('Programado', 'No Programado'),
+      allowNull: false,
+      defaultValue: 'Programado'
+  },
 
     // Columnas dinámicas 1A-28B
     ...Object.fromEntries(

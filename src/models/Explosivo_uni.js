@@ -10,9 +10,14 @@ const Explisivos_uni = sequelize.define('Explisivos_uni', {
     dato: {
         type: DataTypes.FLOAT,
         allowNull: false
+    },
+    tipo: {  // Nuevo campo
+        type: DataTypes.STRING,
+        allowNull: false
     }
 }, {
     tableName: 'Explisivos_uni',
     timestamps: false
 });
+
 module.exports = Explisivos_uni;

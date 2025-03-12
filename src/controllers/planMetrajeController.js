@@ -9,7 +9,7 @@ const getAllPlanMetraje = async (req, res) => {
         res.status(500).json({ message: 'Error al obtener los planes de metraje', error });
     }
 };
-
+ 
 // Obtener un registro por ID
 const getPlanMetrajeById = async (req, res) => {
     try {
@@ -67,7 +67,33 @@ const deletePlanMetraje = async (req, res) => {
     }
 };
 
+const getPlanMetrajeByYearAndMonth = async (req, res) => {
+    try {
+        const { anio, mes } = req.params; // Obtener los parámetros desde la URL
+
+        // Realizar la consulta con los filtros para año y mes
+        const planes = await PlanMetraje.findAll({
+            where: {
+                anio: anio,
+                mes: mes
+            }
+        });
+
+        // Verificar si no se encontraron resultados
+        if (!planes || planes.length === 0) {
+            return res.status(404).json({ message: 'Planes de metraje no encontrados' });
+        }
+
+        // Responder con los planes encontrados
+        res.status(200).json(planes);
+    } catch (error) {
+        res.status(500).json({ message: 'Error al obtener los planes de metraje', error });
+    }
+};
+
+
 module.exports = {
+    getPlanMetrajeByYearAndMonth,
     getAllPlanMetraje,
     getPlanMetrajeById,
     createPlanMetraje,

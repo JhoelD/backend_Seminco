@@ -2,6 +2,7 @@ const { DataTypes } = require('sequelize');
 const sequelize = require('../config/sequelize');
 
 const PlanMetraje = sequelize.define("PlanMetraje", {
+  anio: { type: DataTypes.INTEGER, allowNull: true },
   mes: { type: DataTypes.STRING(20), allowNull: false },
   semana: { type: DataTypes.STRING(20), allowNull: false },
   mina: { type: DataTypes.STRING(50), allowNull: false },
@@ -24,6 +25,11 @@ const PlanMetraje = sequelize.define("PlanMetraje", {
   burden: { type: DataTypes.FLOAT, allowNull: true },
   espaciamiento: { type: DataTypes.FLOAT, allowNull: true },
   longitud_perforacion: { type: DataTypes.FLOAT, allowNull: true },
+  programado: {
+    type: DataTypes.ENUM('Programado', 'No Programado'),
+    allowNull: false,
+    defaultValue: 'Programado'
+},
 
   // Optimizamos las columnas dinámicas
   ...Object.fromEntries(

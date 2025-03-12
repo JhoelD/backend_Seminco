@@ -5,7 +5,8 @@ const {
     getPlanMensualById,
     createPlanMensual,
     updatePlanMensual,
-    deletePlanMensual
+    deletePlanMensual,
+    getPlanMensualByYearAndMonth
 } = require('../../controllers/planMensualController');
 
 const router = express.Router();
@@ -15,5 +16,6 @@ router.get('/:id', verificarToken, getPlanMensualById);
 router.post('/', verificarToken, createPlanMensual);
 router.put('/:id', verificarToken, updatePlanMensual);
 router.delete('/:id', verificarToken, deletePlanMensual);
+router.get('/anio/:anio/mes/:mes', verificarToken, getPlanMensualByYearAndMonth);
 
 module.exports = router; 

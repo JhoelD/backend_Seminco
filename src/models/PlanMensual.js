@@ -7,7 +7,7 @@ const PlanMensual = sequelize.define('PlanMensual', {
         primaryKey: true,
         autoIncrement: true
     },
-    anio: { type: DataTypes.INTEGER, allowNull: true },
+    anio: { type: DataTypes.INTEGER, allowNull: true }, 
     mes: { type: DataTypes.STRING, allowNull: true },
     minado_tipo: { type: DataTypes.STRING, allowNull: true },
     empresa: { type: DataTypes.STRING, allowNull: true },
@@ -24,6 +24,11 @@ const PlanMensual = sequelize.define('PlanMensual', {
     ancho_m: { type: DataTypes.FLOAT, allowNull: true },
     alto_m: { type: DataTypes.FLOAT, allowNull: true },
     tms: { type: DataTypes.FLOAT, allowNull: true },
+    programado: {
+        type: DataTypes.ENUM('Programado', 'No Programado'),
+        allowNull: false,
+        defaultValue: 'Programado'
+    },
     // Campos 1A - 28B
     ...Object.fromEntries(
         Array.from({ length: 28 }, (_, i) => [

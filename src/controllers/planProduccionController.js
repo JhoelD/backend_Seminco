@@ -1,6 +1,31 @@
 const PlanProduccion = require("../models/PlanProduccion");
 
 // Obtener todos los registros
+
+exports.getPlanProduccionByYearAndMonth = async (req, res) => {
+  try {
+      const { anio, mes } = req.params; // Obtener los parámetros desde la URL
+
+      // Realizar la consulta con los filtros para año y mes
+      const planes = await PlanProduccion.findAll({
+          where: {
+              anio: anio,
+              mes: mes
+          }
+      });
+
+      // Verificar si no se encontraron resultados
+      if (!planes || planes.length === 0) {
+          return res.status(404).json({ message: 'Planes de producción no encontrados' });
+      }
+
+      // Responder con los planes encontrados
+      res.status(200).json(planes);
+  } catch (error) {
+      res.status(500).json({ message: 'Error al obtener los planes de producción', error });
+  }
+};
+
 exports.getAll = async (req, res) => {
   try {
     const planes = await PlanProduccion.findAll();
