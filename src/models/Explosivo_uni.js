@@ -16,7 +16,7 @@ const Explisivos_uni = sequelize.define('Explisivos_uni', {
         allowNull: false
     }
 }, {
-    tableName: 'Explisivos_uni',
+    tableName: 'explisivos_uni',
     timestamps: false
 });
 
