@@ -15,6 +15,10 @@ const Accesorio = sequelize.define('Accesorio', {
         type: DataTypes.FLOAT,
         allowNull: false,
         comment: 'Costo en $/pieza o $/m'
+    },
+    unidad_medida: {
+        type: DataTypes.STRING,
+        allowNull: false
     }
 }, {
     tableName: 'accesorios',

@@ -22,6 +22,10 @@ const Explosivo = sequelize.define('Explosivo', {
     costo_por_kg: {
         type: DataTypes.FLOAT,
         allowNull: false
+    },
+    unidad_medida: {
+        type: DataTypes.STRING,
+        allowNull: false
     }
 }, {
     tableName: 'explosivos',
