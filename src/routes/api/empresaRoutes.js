@@ -5,5 +5,6 @@ const verificarToken = require('../../middleware/auth');
 
 router.get('/', verificarToken,  empresaController.getAll);
 router.post('/', verificarToken,  empresaController.create);
+router.delete('/:id', verificarToken, empresaController.delete);
 
 module.exports = router;

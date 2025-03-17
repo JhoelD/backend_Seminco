@@ -17,6 +17,21 @@ const empresaController = {
         } catch (error) {
             res.status(500).json({ error: 'Error al crear la empresa' });
         }
+    },
+    delete: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const empresa = await Empresa.findByPk(id);
+
+            if (!empresa) {
+                return res.status(404).json({ error: 'Empresa no encontrada' });
+            }
+
+            await empresa.destroy();
+            res.json({ message: 'Empresa eliminada correctamente' });
+        } catch (error) {
+            res.status(500).json({ error: 'Error al eliminar la empresa' });
+        }
     }
 };
 
