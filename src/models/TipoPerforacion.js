@@ -10,6 +10,10 @@ const TipoPerforacion = sequelize.define('TipoPerforacion', {
     nombre: {
         type: DataTypes.STRING,
         allowNull: false
+    },
+    proceso: {
+        type: DataTypes.STRING,
+        allowNull: true // Permitir valores nulos
     }
 }, {
     tableName: 'tipoperforacions',
@@ -17,3 +21,4 @@ const TipoPerforacion = sequelize.define('TipoPerforacion', {
 });
 
 module.exports = TipoPerforacion;
+ 
