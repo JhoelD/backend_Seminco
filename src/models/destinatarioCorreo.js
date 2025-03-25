@@ -19,7 +19,7 @@ const DestinatarioCorreo = sequelize.define('DestinatarioCorreo', {
         }
     }
 }, {
-    tableName: 'DestinatarioCorreo',
+    tableName: 'destinatariocorreo',
     timestamps: false
 });
 
