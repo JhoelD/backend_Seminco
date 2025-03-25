@@ -6,7 +6,11 @@ exports.getAllDestinatarios = async (req, res) => {
         const destinatarios = await DestinatarioCorreo.findAll();
         res.json(destinatarios);
     } catch (error) {
-        res.status(500).json({ error: 'Error al obtener los destinatarios' });
+        console.error('Error detallado al obtener los destinatarios:', error); // Log completo en consola
+        res.status(500).json({ 
+            error: 'Error al obtener los destinatarios', 
+            details: error.message || error 
+        });
     }
 };
 
