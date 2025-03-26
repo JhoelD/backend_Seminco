@@ -18,6 +18,7 @@ const Accesorio = require('../routes/api/accesorioRoutes');
 const ExploUni = require('../routes/api/explisivosUniRouter');
 const destinatarioCorreoRoutes = require('../routes/api/destinatarioCorreoRoutes');
 const fechasplanmensual = require('../routes/api/fechasPlanMensualroutes');
+const operacionLargoRoutes = require('../routes/api/operacionLargoRoutes');
 
 router.use('/usuarios', usuariosRoutes);  
 router.use('/auth', authRoutes);  
@@ -35,5 +36,5 @@ router.use('/Accesorios', Accesorio);
 router.use('/Explo-uni', ExploUni); 
 router.use('/Despacho-Destinatario', destinatarioCorreoRoutes); 
 router.use('/fechas-plan-mensual', fechasplanmensual); 
-
+router.use('/operacion', operacionLargoRoutes); 
 module.exports = router;
