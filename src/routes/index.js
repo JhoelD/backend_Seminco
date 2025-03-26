@@ -19,6 +19,7 @@ const ExploUni = require('../routes/api/explisivosUniRouter');
 const destinatarioCorreoRoutes = require('../routes/api/destinatarioCorreoRoutes');
 const fechasplanmensual = require('../routes/api/fechasPlanMensualroutes');
 const operacionLargoRoutes = require('../routes/api/operacionLargoRoutes');
+const NubeDatosTrabajoExploraciones = require('../routes/api/NubeDatosTrabajoExploracionesRoutes');
 
 router.use('/usuarios', usuariosRoutes);  
 router.use('/auth', authRoutes);  
@@ -37,4 +38,6 @@ router.use('/Explo-uni', ExploUni);
 router.use('/Despacho-Destinatario', destinatarioCorreoRoutes); 
 router.use('/fechas-plan-mensual', fechasplanmensual); 
 router.use('/operacion', operacionLargoRoutes); 
+router.use('/NubeDatosExploraciones', NubeDatosTrabajoExploraciones); 
+
 module.exports = router;
