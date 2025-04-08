@@ -6,58 +6,56 @@ const { NubeOperacion, NubeHorometros, NubeEstado, NubePerforacionTaladroLargo, 
     NubeInterSostenimiento
  } = require('../models/operacionLargo');
 
-async function crearOperacionLargo(req, res) {
-    const t = await sequelize.transaction(); // Iniciar una transacción
+ async function crearOperacionLargo(req, res) {
+    const t = await sequelize.transaction();
 
     try {
-        const operacionData = req.body.operacion;
-         
-        // 1. Crear la operación principal
-        const operacion = await NubeOperacion.create(operacionData, { transaction: t });
-        
-        // 2. Crear los estados asociados a la operación
-        const estados = req.body.estados.map(estado => ({
-            ...estado,
-            operacion_id: operacion.id
-        }));
-        await NubeEstado.bulkCreate(estados, { transaction: t });
+        const operacionesData = Array.isArray(req.body) ? req.body : [req.body]; // Acepta tanto lista como objeto único
 
-        // 3. Crear las perforaciones asociadas a la operación
-        const perforaciones = req.body.perforaciones.map(perforacion => ({
-            ...perforacion,
-            operacion_id: operacion.id
-        }));
-        const perforacionesCreadas = await NubePerforacionTaladroLargo.bulkCreate(perforaciones, { transaction: t });
-
-        // 4. Crear las inter-perforaciones asociadas a las perforaciones
-        const interPerforaciones = req.body.perforaciones.map((perforacion, index) => {
-            return perforacion.inter_perforaciones.map(inter => ({
-                ...inter,
-                perforaciontaladrolargo_id: perforacionesCreadas[index].id
+        for (const data of operacionesData) {
+            // 1. Crear operación principal
+            const operacion = await NubeOperacion.create(data.operacion, { transaction: t });
+            
+            // 2. Crear estados
+            const estados = data.estados.map(estado => ({
+                ...estado,
+                operacion_id: operacion.id
             }));
-        }).flat(); // Flatten the array of inter perforaciones
+            await NubeEstado.bulkCreate(estados, { transaction: t });
 
-        await NubeInterPerforacionTaladroLargo.bulkCreate(interPerforaciones, { transaction: t });
+            // 3. Crear perforaciones
+            const perforaciones = data.perforaciones.map(perforacion => ({
+                ...perforacion,
+                operacion_id: operacion.id
+            }));
+            const perforacionesCreadas = await NubePerforacionTaladroLargo.bulkCreate(perforaciones, { transaction: t });
 
-        // 5. Crear los horómetros asociados a la operación
-        const horometros = req.body.horometros.map(horo => ({
-            ...horo,
-            operacion_id: operacion.id
-        }));
-        await NubeHorometros.bulkCreate(horometros, { transaction: t });
+            // 4. Crear inter-perforaciones
+            const interPerforaciones = data.perforaciones.map((perforacion, index) => {
+                return perforacion.inter_perforaciones.map(inter => ({
+                    ...inter,
+                    perforaciontaladrolargo_id: perforacionesCreadas[index].id
+                }));
+            }).flat();
+            await NubeInterPerforacionTaladroLargo.bulkCreate(interPerforaciones, { transaction: t });
 
-        // Confirmar la transacción
+            // 5. Crear horómetros
+            const horometros = data.horometros.map(horo => ({
+                ...horo,
+                operacion_id: operacion.id
+            }));
+            await NubeHorometros.bulkCreate(horometros, { transaction: t });
+        }
+
         await t.commit();
-
-        // Enviar respuesta exitosa
-        res.status(201).json({ message: 'Operación creada con éxito' });
+        res.status(201).json({ message: `${operacionesData.length} operación(es) creada(s) con éxito` });
 
     } catch (error) {
-        // Si ocurre un error, hacer rollback
         await t.rollback();
         res.status(500).json({ error: error.message });
     }
 }
+
 async function obtenerOperacionesLargo(req, res) {
     try {
         const operaciones = await NubeOperacion.findAll({
@@ -94,53 +92,53 @@ async function obtenerOperacionesLargo(req, res) {
 }
 //HORIZONTAL-----------------------------------------------------------
 async function crearOperacionHorizontal(req, res) {
-    const t = await sequelize.transaction(); // Iniciar una transacción
+    const t = await sequelize.transaction();
 
     try {
-        const operacionData = req.body.operacion;
-        
-        // 1. Crear la operación principal
-        const operacion = await NubeOperacion.create(operacionData, { transaction: t });
-        
-        // 2. Crear los estados asociados a la operación
-        const estados = req.body.estados.map(estado => ({
-            ...estado,
-            operacion_id: operacion.id
-        }));
-        await NubeEstado.bulkCreate(estados, { transaction: t });
+        // Acepta tanto un objeto único como un array
+        const operacionesData = Array.isArray(req.body) ? req.body : [req.body];
 
-        // 3. Crear las perforaciones horizontales asociadas a la operación
-        const perforaciones = req.body.perforaciones.map(perforacion => ({
-            ...perforacion,
-            operacion_id: operacion.id
-        }));
-        const perforacionesCreadas = await NubePerforacionHorizontal.bulkCreate(perforaciones, { transaction: t });
-
-        // 4. Crear las inter-perforaciones horizontales asociadas a las perforaciones
-        const interPerforaciones = req.body.perforaciones.map((perforacion, index) => {
-            return perforacion.inter_perforaciones.map(inter => ({
-                ...inter,
-                perforacionhorizontal_id: perforacionesCreadas[index].id
+        for (const data of operacionesData) {
+            // 1. Crear operación principal
+            const operacion = await NubeOperacion.create(data.operacion, { transaction: t });
+            
+            // 2. Crear estados
+            const estados = data.estados.map(estado => ({
+                ...estado,
+                operacion_id: operacion.id
             }));
-        }).flat(); // Flatten the array of inter perforaciones
+            await NubeEstado.bulkCreate(estados, { transaction: t });
 
-        await NubeInterPerforacionHorizontal.bulkCreate(interPerforaciones, { transaction: t });
+            // 3. Crear perforaciones horizontales
+            const perforaciones = data.perforaciones.map(perforacion => ({
+                ...perforacion,
+                operacion_id: operacion.id
+            }));
+            const perforacionesCreadas = await NubePerforacionHorizontal.bulkCreate(perforaciones, { transaction: t });
 
-        // 5. Crear los horómetros asociados a la operación
-        const horometros = req.body.horometros.map(horo => ({
-            ...horo,
-            operacion_id: operacion.id
-        }));
-        await NubeHorometros.bulkCreate(horometros, { transaction: t });
+            // 4. Crear inter-perforaciones horizontales
+            const interPerforaciones = data.perforaciones.map((perforacion, index) => {
+                return perforacion.inter_perforaciones.map(inter => ({
+                    ...inter,
+                    perforacionhorizontal_id: perforacionesCreadas[index].id
+                }));
+            }).flat();
+            await NubeInterPerforacionHorizontal.bulkCreate(interPerforaciones, { transaction: t });
 
-        // Confirmar la transacción
+            // 5. Crear horómetros
+            const horometros = data.horometros.map(horo => ({
+                ...horo,
+                operacion_id: operacion.id
+            }));
+            await NubeHorometros.bulkCreate(horometros, { transaction: t });
+        }
+
         await t.commit();
-
-        // Enviar respuesta exitosa
-        res.status(201).json({ message: 'Operación horizontal creada con éxito' });
+        res.status(201).json({ 
+            message: `${operacionesData.length} operación(es) horizontal(es) creada(s) con éxito` 
+        });
 
     } catch (error) {
-        // Si ocurre un error, hacer rollback
         await t.rollback();
         res.status(500).json({ error: error.message });
     }
@@ -183,53 +181,53 @@ async function obtenerOperacionesHorizontal(req, res) {
 
 //SOSTENIMIENTO---------------------------------------------------------
 async function crearOperacionSostenimiento(req, res) {
-    const t = await sequelize.transaction(); // Iniciar una transacción
+    const t = await sequelize.transaction();
 
     try {
-        const operacionData = req.body.operacion;
-        
-        // 1. Crear la operación principal
-        const operacion = await NubeOperacion.create(operacionData, { transaction: t });
-        
-        // 2. Crear los estados asociados a la operación
-        const estados = req.body.estados.map(estado => ({
-            ...estado,
-            operacion_id: operacion.id
-        }));
-        await NubeEstado.bulkCreate(estados, { transaction: t });
+        // Acepta tanto un objeto único como un array
+        const operacionesData = Array.isArray(req.body) ? req.body : [req.body];
 
-        // 3. Crear los sostenimientos asociados a la operación
-        const sostenimientos = req.body.sostenimientos.map(sostenimiento => ({
-            ...sostenimiento,
-            operacion_id: operacion.id
-        }));
-        const sostenimientosCreados = await NubeSostenimiento.bulkCreate(sostenimientos, { transaction: t });
-
-        // 4. Crear las inter-sostenimientos asociados a los sostenimientos
-        const interSostenimientos = req.body.sostenimientos.map((sostenimiento, index) => {
-            return sostenimiento.inter_sostenimientos.map(inter => ({
-                ...inter,
-                sostenimiento_id: sostenimientosCreados[index].id
+        for (const data of operacionesData) {
+            // 1. Crear operación principal
+            const operacion = await NubeOperacion.create(data.operacion, { transaction: t });
+            
+            // 2. Crear estados
+            const estados = data.estados.map(estado => ({
+                ...estado,
+                operacion_id: operacion.id
             }));
-        }).flat(); // Flatten the array of inter sostenimientos
+            await NubeEstado.bulkCreate(estados, { transaction: t });
 
-        await NubeInterSostenimiento.bulkCreate(interSostenimientos, { transaction: t });
+            // 3. Crear sostenimientos
+            const sostenimientos = data.sostenimientos.map(sostenimiento => ({
+                ...sostenimiento,
+                operacion_id: operacion.id
+            }));
+            const sostenimientosCreados = await NubeSostenimiento.bulkCreate(sostenimientos, { transaction: t });
 
-        // 5. Crear los horómetros asociados a la operación
-        const horometros = req.body.horometros.map(horo => ({
-            ...horo,
-            operacion_id: operacion.id
-        }));
-        await NubeHorometros.bulkCreate(horometros, { transaction: t });
+            // 4. Crear inter-sostenimientos
+            const interSostenimientos = data.sostenimientos.map((sostenimiento, index) => {
+                return sostenimiento.inter_sostenimientos.map(inter => ({
+                    ...inter,
+                    sostenimiento_id: sostenimientosCreados[index].id
+                }));
+            }).flat();
+            await NubeInterSostenimiento.bulkCreate(interSostenimientos, { transaction: t });
 
-        // Confirmar la transacción
+            // 5. Crear horómetros
+            const horometros = data.horometros.map(horo => ({
+                ...horo,
+                operacion_id: operacion.id
+            }));
+            await NubeHorometros.bulkCreate(horometros, { transaction: t });
+        }
+
         await t.commit();
-
-        // Enviar respuesta exitosa
-        res.status(201).json({ message: 'Operación de sostenimiento creada con éxito' });
+        res.status(201).json({ 
+            message: `${operacionesData.length} operación(es) de sostenimiento creada(s) con éxito` 
+        });
 
     } catch (error) {
-        // Si ocurre un error, hacer rollback
         await t.rollback();
         res.status(500).json({ error: error.message });
     }
