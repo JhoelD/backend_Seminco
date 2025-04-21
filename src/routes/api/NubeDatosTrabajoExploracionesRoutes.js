@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const tranajoExploController = require('../../controllers/NubeDatosTrabajoExploracionesConstroller');
+const verificarToken = require('../../middleware/auth');
 
-router.post('/', tranajoExploController.crearExploracionCompleta);
+router.post('/', verificarToken, tranajoExploController.crearExploracionCompleta);
 
-router.get('/', tranajoExploController.obtenerExploracionesCompletas);
+router.get('/', verificarToken, tranajoExploController.obtenerExploracionesCompletas);
 
-router.get('/:id', tranajoExploController.obtenerExploracionesCompletas);
+router.get('/:id', verificarToken, tranajoExploController.obtenerExploracionesCompletas);
 
-module.exports = router;
+module.exports = router; 
