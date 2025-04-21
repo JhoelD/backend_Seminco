@@ -12,7 +12,7 @@ app.use(bodyParser.json());
 
 app.use('/api', routes);
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor corriendo en el puerto ${PORT}`);
+const port = 3000;
+app.listen(port,  '0.0.0.0', () => {
+  console.log(`Servidor corriendo en http://10.0.2.2:${port}`);
 });
