@@ -36,7 +36,7 @@ exports.crearUsuario = [
     async (req, res) => {
         try {
             const {
-                codigo_dni, apellidos, nombres, cargo = null, area = null,
+                codigo_dni, apellidos, nombres, cargo = null, rol = null, area = null,
                 clasificacion = null, empresa = null, guardia = null,
                 autorizado_equipo = null, correo = null, password
             } = req.body;
@@ -55,9 +55,9 @@ exports.crearUsuario = [
             const hashedPassword = await bcrypt.hash(password, salt);
 
             await db.query(
-                `INSERT INTO usuarios (codigo_dni, apellidos, nombres, cargo, area, clasificacion, empresa, guardia, autorizado_equipo, correo, password, firma, createdAt, updatedAt) 
+                `INSERT INTO usuarios (codigo_dni, apellidos, nombres, cargo, rol, area, clasificacion, empresa, guardia, autorizado_equipo, correo, password, firma, createdAt, updatedAt) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-                [codigo_dni, apellidos, nombres, cargo, area, clasificacion, empresa, guardia, autorizado_equipo, correo, hashedPassword, firma]
+                [codigo_dni, apellidos, nombres, cargo, rol, area, clasificacion, empresa, guardia, autorizado_equipo, correo, hashedPassword, firma]
             );
 
             res.status(201).json({ message: 'Usuario creado exitosamente', firma });
@@ -74,15 +74,15 @@ exports.actualizarUsuario = [
     upload.single('firma'),
     async (req, res) => {
         const { id } = req.params;
-        const { codigo_dni, apellidos, nombres, cargo, empresa, guardia, autorizado_equipo, correo, password } = req.body;
+        const { codigo_dni, apellidos, nombres, cargo, empresa, rol, guardia, autorizado_equipo, correo, password } = req.body;
         const firma = req.file ? req.file.path : null; // URL de Cloudinary
 
         try {
             const [rows] = await db.query('SELECT * FROM usuarios WHERE id = ?', [id]);
             if (rows.length === 0) return res.status(404).json({ error: 'Usuario no encontrado' });
 
-            let query = `UPDATE usuarios SET codigo_dni = ?, apellidos = ?, nombres = ?, cargo = ?, empresa = ?, guardia = ?, autorizado_equipo = ?, correo = ?, updatedAt = NOW()`;
-            const queryParams = [codigo_dni, apellidos, nombres, cargo, empresa, guardia, autorizado_equipo, correo];
+            let query = `UPDATE usuarios SET codigo_dni = ?, apellidos = ?, nombres = ?, cargo = ?, rol = ?, empresa = ?, guardia = ?, autorizado_equipo = ?, correo = ?, updatedAt = NOW()`;
+            const queryParams = [codigo_dni, apellidos, nombres, cargo, rol, empresa, guardia, autorizado_equipo, correo];
 
             if (firma) {
                 // **Eliminar la firma anterior de Cloudinary**
@@ -144,7 +144,7 @@ exports.obtenerPerfil = [verificarToken, async (req, res) => {
         const { id } = req.user;
 
         const [rows] = await db.query(
-            'SELECT id, codigo_dni, apellidos, nombres, cargo, empresa, guardia, autorizado_equipo, correo, firma FROM usuarios WHERE id = ?',
+            'SELECT id, codigo_dni, apellidos, nombres, cargo, rol, empresa, guardia, autorizado_equipo, correo, firma FROM usuarios WHERE id = ?',
             [id]
         );
 
