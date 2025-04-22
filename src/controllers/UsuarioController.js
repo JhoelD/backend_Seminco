@@ -148,7 +148,7 @@ exports.obtenerPerfil = [verificarToken, async (req, res) => {
         const { id } = req.user;
 
         const [rows] = await db.query(
-            'SELECT id, codigo_dni, apellidos, nombres, cargo, empresa, guardia, autorizado_equipo, correo, firma FROM usuarios WHERE id = ?',
+            'SELECT id, codigo_dni, apellidos, nombres, cargo, empresa, guardia, autorizado_equipo, correo, firma, rol FROM usuarios WHERE id = ?',
             [id]
         );
 
