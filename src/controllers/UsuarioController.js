@@ -56,7 +56,7 @@ exports.crearUsuario = [
 
             await db.query(
                 `INSERT INTO usuarios (codigo_dni, apellidos, nombres, cargo, rol, area, clasificacion, empresa, guardia, autorizado_equipo, correo, password, firma, createdAt, updatedAt) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
                 [codigo_dni, apellidos, nombres, cargo, rol, area, clasificacion, empresa, guardia, autorizado_equipo, correo, hashedPassword, firma]
             );
 
@@ -67,7 +67,6 @@ exports.crearUsuario = [
         }
     }
 ];
-
 
 exports.actualizarUsuario = [
     verificarToken,
@@ -80,6 +79,11 @@ exports.actualizarUsuario = [
         try {
             const [rows] = await db.query('SELECT * FROM usuarios WHERE id = ?', [id]);
             if (rows.length === 0) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+            // Validación del campo rol
+            if (rol && !['admin', 'user', 'supervisor'].includes(rol)) {
+                return res.status(400).json({ error: 'Rol no válido. Los valores permitidos son: admin, user, supervisor' });
+            }
 
             let query = `UPDATE usuarios SET codigo_dni = ?, apellidos = ?, nombres = ?, cargo = ?, rol = ?, empresa = ?, guardia = ?, autorizado_equipo = ?, correo = ?, updatedAt = NOW()`;
             const queryParams = [codigo_dni, apellidos, nombres, cargo, rol, empresa, guardia, autorizado_equipo, correo];
@@ -144,7 +148,7 @@ exports.obtenerPerfil = [verificarToken, async (req, res) => {
         const { id } = req.user;
 
         const [rows] = await db.query(
-            'SELECT id, codigo_dni, apellidos, nombres, cargo, rol, empresa, guardia, autorizado_equipo, correo, firma FROM usuarios WHERE id = ?',
+            'SELECT id, codigo_dni, apellidos, nombres, cargo, empresa, guardia, autorizado_equipo, correo, firma FROM usuarios WHERE id = ?',
             [id]
         );
 
