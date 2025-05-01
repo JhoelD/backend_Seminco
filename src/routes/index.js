@@ -20,6 +20,9 @@ const destinatarioCorreoRoutes = require('../routes/api/destinatarioCorreoRoutes
 const fechasplanmensual = require('../routes/api/fechasPlanMensualroutes');
 const operacionLargoRoutes = require('../routes/api/operacionLargoRoutes');
 const NubeDatosTrabajoExploraciones = require('../routes/api/NubeDatosTrabajoExploracionesRoutes');
+const metas = require('../routes/api/metaRoutes');
+const metaslargo = require('../routes/api/metaLargoRoutes');
+const metassoste = require('../routes/api/metaSostenimientoRoutes');
 
 router.use('/usuarios', usuariosRoutes);  
 router.use('/auth', authRoutes);  
@@ -39,5 +42,8 @@ router.use('/Despacho-Destinatario', destinatarioCorreoRoutes);
 router.use('/fechas-plan-mensual', fechasplanmensual); 
 router.use('/operacion', operacionLargoRoutes); 
 router.use('/NubeDatosExploraciones', NubeDatosTrabajoExploraciones); 
+router.use('/metas-horizontal', metas); 
+router.use('/metas-largo', metaslargo); 
+router.use('/metas-sostenimiento', metassoste); 
 
 module.exports = router;
