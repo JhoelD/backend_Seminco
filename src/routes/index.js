@@ -23,6 +23,7 @@ const NubeDatosTrabajoExploraciones = require('../routes/api/NubeDatosTrabajoExp
 const metas = require('../routes/api/metaRoutes');
 const metaslargo = require('../routes/api/metaLargoRoutes');
 const metassoste = require('../routes/api/metaSostenimientoRoutes');
+const mediciones = require('../routes/api/perforacionesMediciones');
 
 router.use('/usuarios', usuariosRoutes);  
 router.use('/auth', authRoutes);  
@@ -45,5 +46,6 @@ router.use('/NubeDatosExploraciones', NubeDatosTrabajoExploraciones);
 router.use('/metas-horizontal', metas); 
 router.use('/metas-largo', metaslargo); 
 router.use('/metas-sostenimiento', metassoste); 
+router.use('/mediciones', mediciones); 
 
 module.exports = router;
