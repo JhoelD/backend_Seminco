@@ -4,28 +4,41 @@ const DetallePerforacionMedicion = require('../models/detalles_perforacion_medic
 
 // POST: Crear perforación con detalles
 exports.createPerforacion = async (req, res) => {
-  const { mes, semana, tipo_perforacion, envio, detalles } = req.body;
+  const perforacionesData = req.body; // aquí asumimos que es un array
+
+  if (!Array.isArray(perforacionesData)) {
+    return res.status(400).json({ message: 'Se esperaba un array de perforaciones' });
+  }
 
   try {
-    const perforacion = await PerforacionMedicion.create(
-      {
-        mes,
-        semana,
-        tipo_perforacion,
-        envio,
-        detalles // array de objetos
-      },
-      {
-        include: [{ model: DetallePerforacionMedicion, as: 'detalles' }]
-      }
-    );
+    const results = [];
 
-    res.status(201).json({ message: 'Perforación creada con éxito', perforacion });
+    for (const perf of perforacionesData) {
+      const { mes, semana, tipo_perforacion, envio, detalles } = perf;
+
+      const perforacion = await PerforacionMedicion.create(
+        {
+          mes,
+          semana,
+          tipo_perforacion,
+          envio,
+          detalles
+        },
+        {
+          include: [{ model: DetallePerforacionMedicion, as: 'detalles' }]
+        }
+      );
+
+      results.push(perforacion);
+    }
+
+    res.status(201).json({ message: 'Perforaciones creadas con éxito', perforaciones: results });
   } catch (error) {
-    console.error('Error al crear perforación:', error);
+    console.error('Error al crear perforaciones:', error);
     res.status(500).json({ message: 'Error interno del servidor' });
   }
 };
+
 
 // GET: Obtener todas las perforaciones con sus detalles
 exports.getPerforaciones = async (req, res) => {
