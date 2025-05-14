@@ -4,10 +4,11 @@ const DetallePerforacionMedicion = require('../models/detalles_perforacion_medic
 
 // POST: Crear perforación con detalles
 exports.createPerforacion = async (req, res) => {
-  const perforacionesData = req.body; // aquí asumimos que es un array
+  let perforacionesData = req.body;
 
+  // Normalizar: si es un solo objeto, lo convertimos en un array
   if (!Array.isArray(perforacionesData)) {
-    return res.status(400).json({ message: 'Se esperaba un array de perforaciones' });
+    perforacionesData = [perforacionesData];
   }
 
   try {
@@ -32,7 +33,10 @@ exports.createPerforacion = async (req, res) => {
       results.push(perforacion);
     }
 
-    res.status(201).json({ message: 'Perforaciones creadas con éxito', perforaciones: results });
+    res.status(201).json({
+      message: 'Perforaciones creadas con éxito',
+      perforaciones: results
+    });
   } catch (error) {
     console.error('Error al crear perforaciones:', error);
     res.status(500).json({ message: 'Error interno del servidor' });
