@@ -11,10 +11,12 @@ const { NubeOperacion, NubeHorometros, NubeEstado, NubePerforacionTaladroLargo, 
 
     try {
         const operacionesData = Array.isArray(req.body) ? req.body : [req.body]; // Acepta tanto lista como objeto único
+        const idsOperacionesCreadas = [];
 
         for (const data of operacionesData) {
             // 1. Crear operación principal
             const operacion = await NubeOperacion.create(data.operacion, { transaction: t });
+            idsOperacionesCreadas.push(operacion.id); 
             
             // 2. Crear estados
             const estados = data.estados.map(estado => ({
@@ -48,7 +50,7 @@ const { NubeOperacion, NubeHorometros, NubeEstado, NubePerforacionTaladroLargo, 
         }
 
         await t.commit();
-        res.status(201).json({ message: `${operacionesData.length} operación(es) creada(s) con éxito` });
+        res.status(201).json({ operaciones_ids: idsOperacionesCreadas });
 
     } catch (error) {
         await t.rollback();
@@ -97,10 +99,12 @@ async function crearOperacionHorizontal(req, res) {
     try {
         // Acepta tanto un objeto único como un array
         const operacionesData = Array.isArray(req.body) ? req.body : [req.body];
+        const idsOperacionesCreadas = [];
 
         for (const data of operacionesData) {
             // 1. Crear operación principal
             const operacion = await NubeOperacion.create(data.operacion, { transaction: t });
+            idsOperacionesCreadas.push(operacion.id); 
             
             // 2. Crear estados
             const estados = data.estados.map(estado => ({
@@ -134,9 +138,7 @@ async function crearOperacionHorizontal(req, res) {
         }
 
         await t.commit();
-        res.status(201).json({ 
-            message: `${operacionesData.length} operación(es) horizontal(es) creada(s) con éxito` 
-        });
+        res.status(201).json({ operaciones_ids: idsOperacionesCreadas });
 
     } catch (error) {
         await t.rollback();
@@ -186,11 +188,13 @@ async function crearOperacionSostenimiento(req, res) {
     try {
         // Acepta tanto un objeto único como un array
         const operacionesData = Array.isArray(req.body) ? req.body : [req.body];
+        const idsOperacionesCreadas = [];
 
         for (const data of operacionesData) {
             // 1. Crear operación principal
             const operacion = await NubeOperacion.create(data.operacion, { transaction: t });
-            
+            idsOperacionesCreadas.push(operacion.id); 
+
             // 2. Crear estados
             const estados = data.estados.map(estado => ({
                 ...estado,
@@ -223,10 +227,8 @@ async function crearOperacionSostenimiento(req, res) {
         }
 
         await t.commit();
-        res.status(201).json({ 
-            message: `${operacionesData.length} operación(es) de sostenimiento creada(s) con éxito` 
-        });
-
+        res.status(201).json({ operaciones_ids: idsOperacionesCreadas });
+        
     } catch (error) {
         await t.rollback();
         res.status(500).json({ error: error.message });
