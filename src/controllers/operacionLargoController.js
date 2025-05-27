@@ -58,6 +58,71 @@ const { NubeOperacion, NubeHorometros, NubeEstado, NubePerforacionTaladroLargo, 
     }
 }
 
+async function actualizarOperacionLargo(req, res) {
+    const t = await sequelize.transaction();
+
+    try {
+        const operacionesData = Array.isArray(req.body) ? req.body : [req.body];
+
+        for (const data of operacionesData) {
+            const operacionId = data.operacion.id;
+
+            // 1. Actualizar operación principal
+            await NubeOperacion.update(data.operacion, {
+                where: { id: operacionId },
+                transaction: t
+            });
+
+            // 2. Eliminar relaciones antiguas
+            await NubeEstado.destroy({ where: { operacion_id: operacionId }, transaction: t });
+            await NubeHorometros.destroy({ where: { operacion_id: operacionId }, transaction: t });
+
+            const perforacionesAntiguas = await NubePerforacionTaladroLargo.findAll({
+                where: { operacion_id: operacionId },
+                transaction: t
+            });
+            const perforacionIds = perforacionesAntiguas.map(p => p.id);
+
+            await NubeInterPerforacionTaladroLargo.destroy({ where: { perforaciontaladrolargo_id: perforacionIds }, transaction: t });
+            await NubePerforacionTaladroLargo.destroy({ where: { operacion_id: operacionId }, transaction: t });
+
+            // 3. Crear nuevamente relaciones actualizadas
+            const estados = data.estados.map(estado => ({
+                ...estado,
+                operacion_id: operacionId
+            }));
+            await NubeEstado.bulkCreate(estados, { transaction: t });
+
+            const perforaciones = data.perforaciones.map(perforacion => ({
+                ...perforacion,
+                operacion_id: operacionId
+            }));
+            const perforacionesCreadas = await NubePerforacionTaladroLargo.bulkCreate(perforaciones, { transaction: t });
+
+            const interPerforaciones = data.perforaciones.map((perforacion, index) => {
+                return perforacion.inter_perforaciones.map(inter => ({
+                    ...inter,
+                    perforaciontaladrolargo_id: perforacionesCreadas[index].id
+                }));
+            }).flat();
+            await NubeInterPerforacionTaladroLargo.bulkCreate(interPerforaciones, { transaction: t });
+
+            const horometros = data.horometros.map(horo => ({
+                ...horo,
+                operacion_id: operacionId
+            }));
+            await NubeHorometros.bulkCreate(horometros, { transaction: t });
+        }
+
+        await t.commit();
+        res.status(200).json({ mensaje: 'Operaciones actualizadas correctamente' });
+
+    } catch (error) {
+        await t.rollback();
+        res.status(500).json({ error: error.message });
+    }
+}
+
 async function obtenerOperacionesLargo(req, res) {
     try {
         const operaciones = await NubeOperacion.findAll({
@@ -270,4 +335,4 @@ async function obtenerOperacionesSostenimiento(req, res) {
     }
 }
 
-module.exports = { crearOperacionLargo, obtenerOperacionesLargo, crearOperacionHorizontal, obtenerOperacionesHorizontal, crearOperacionSostenimiento, obtenerOperacionesSostenimiento  };
+module.exports = { crearOperacionLargo,actualizarOperacionLargo, obtenerOperacionesLargo, crearOperacionHorizontal, obtenerOperacionesHorizontal, crearOperacionSostenimiento, obtenerOperacionesSostenimiento  };

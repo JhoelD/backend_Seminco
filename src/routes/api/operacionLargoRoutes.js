@@ -5,6 +5,7 @@ const verificarToken = require('../../middleware/auth');
 
 // Ruta para manejar la creación de una nueva operación
 router.post('/largo', OperacionController.crearOperacionLargo);
+router.post('/update-largo', OperacionController.actualizarOperacionLargo);
 router.get('/largo', verificarToken, OperacionController.obtenerOperacionesLargo);
 
 // Rutas para Operaciones Horizontales
