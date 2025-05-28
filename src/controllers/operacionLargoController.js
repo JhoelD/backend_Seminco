@@ -267,6 +267,127 @@ async function crearOperacionHorizontal(req, res) {
     }
 }
 
+async function actualizarOperacionHorizontal(req, res) {
+    const t = await sequelize.transaction();
+
+    try {
+        const operacionesData = Array.isArray(req.body) ? req.body : [req.body];
+        const resultados = [];
+
+        for (const data of operacionesData) {
+            const operacionId = data.operacion.id;
+            const resultadoOperacion = {
+                id: operacionId,
+                success: true,
+                message: 'Operación horizontal actualizada correctamente'
+            };
+
+            try {
+                // 1. Verificar que la operación existe
+                const operacionExistente = await NubeOperacion.findByPk(operacionId, { transaction: t });
+                if (!operacionExistente) {
+                    throw new Error(`Operación horizontal con ID ${operacionId} no encontrada`);
+                }
+
+                // 2. Actualizar operación principal
+                await NubeOperacion.update(data.operacion, {
+                    where: { id: operacionId },
+                    transaction: t
+                });
+
+                // 3. Eliminar y recrear relaciones en bloques atómicos por tipo
+                // Estados
+                await NubeEstado.destroy({ where: { operacion_id: operacionId }, transaction: t });
+                if (data.estados && data.estados.length > 0) {
+                    await NubeEstado.bulkCreate(
+                        data.estados.map(estado => ({ ...estado, operacion_id: operacionId })),
+                        { transaction: t }
+                    );
+                }
+
+                // Horómetros
+                await NubeHorometros.destroy({ where: { operacion_id: operacionId }, transaction: t });
+                if (data.horometros && data.horometros.length > 0) {
+                    await NubeHorometros.bulkCreate(
+                        data.horometros.map(horo => ({ ...horo, operacion_id: operacionId })),
+                        { transaction: t }
+                    );
+                }
+
+                // Perforaciones horizontales e interperforaciones
+                const perforacionesAntiguas = await NubePerforacionHorizontal.findAll({
+                    where: { operacion_id: operacionId },
+                    transaction: t
+                });
+                
+                if (perforacionesAntiguas.length > 0) {
+                    const perforacionIds = perforacionesAntiguas.map(p => p.id);
+                    await NubeInterPerforacionHorizontal.destroy({
+                        where: { perforacionhorizontal_id: perforacionIds },
+                        transaction: t
+                    });
+                }
+
+                await NubePerforacionHorizontal.destroy({
+                    where: { operacion_id: operacionId },
+                    transaction: t
+                });
+
+                if (data.perforaciones && data.perforaciones.length > 0) {
+                    const perforacionesCreadas = await NubePerforacionHorizontal.bulkCreate(
+                        data.perforaciones.map(perf => ({ ...perf, operacion_id: operacionId })),
+                        { transaction: t }
+                    );
+
+                    const interPerforaciones = data.perforaciones
+                        .map((perforacion, index) => 
+                            (perforacion.inter_perforaciones || []).map(inter => ({
+                                ...inter,
+                                perforacionhorizontal_id: perforacionesCreadas[index].id
+                            }))
+                        )
+                        .flat();
+
+                    if (interPerforaciones.length > 0) {
+                        await NubeInterPerforacionHorizontal.bulkCreate(interPerforaciones, { transaction: t });
+                    }
+                }
+
+                resultados.push(resultadoOperacion);
+            } catch (error) {
+                resultadoOperacion.success = false;
+                resultadoOperacion.message = `Error al actualizar operación horizontal ${operacionId}: ${error.message}`;
+                resultados.push(resultadoOperacion);
+                // Continuamos con las siguientes operaciones en lugar de hacer rollback inmediato
+            }
+        }
+
+        // Verificamos si hubo algún error en alguna operación
+        const errores = resultados.filter(r => !r.success);
+        if (errores.length > 0) {
+            await t.rollback();
+            return res.status(207).json({ // 207 Multi-Status
+                message: 'Algunas operaciones horizontales no se actualizaron correctamente',
+                resultados,
+                errores: errores.map(e => e.message)
+            });
+        }
+
+        await t.commit();
+        res.status(200).json({
+            message: 'Todas las operaciones horizontales actualizadas correctamente',
+            resultados
+        });
+
+    } catch (error) {
+        await t.rollback();
+        res.status(500).json({ 
+            error: error.message,
+            message: 'Error general en la transacción de operaciones horizontales'
+        });
+    }
+}
+
 async function obtenerOperacionesHorizontal(req, res) {
     try {
         const operaciones = await NubeOperacion.findAll({
@@ -356,6 +477,127 @@ async function crearOperacionSostenimiento(req, res) {
     }
 }
 
+async function actualizarOperacionSostenimiento(req, res) {
+    const t = await sequelize.transaction();
+
+    try {
+        const operacionesData = Array.isArray(req.body) ? req.body : [req.body];
+        const resultados = [];
+
+        for (const data of operacionesData) {
+            const operacionId = data.operacion.id;
+            const resultadoOperacion = {
+                id: operacionId,
+                success: true,
+                message: 'Operación de sostenimiento actualizada correctamente'
+            };
+
+            try {
+                // 1. Verificar que la operación existe
+                const operacionExistente = await NubeOperacion.findByPk(operacionId, { transaction: t });
+                if (!operacionExistente) {
+                    throw new Error(`Operación de sostenimiento con ID ${operacionId} no encontrada`);
+                }
+
+                // 2. Actualizar operación principal
+                await NubeOperacion.update(data.operacion, {
+                    where: { id: operacionId },
+                    transaction: t
+                });
+
+                // 3. Eliminar y recrear relaciones en bloques atómicos por tipo
+                // Estados
+                await NubeEstado.destroy({ where: { operacion_id: operacionId }, transaction: t });
+                if (data.estados && data.estados.length > 0) {
+                    await NubeEstado.bulkCreate(
+                        data.estados.map(estado => ({ ...estado, operacion_id: operacionId })),
+                        { transaction: t }
+                    );
+                }
+
+                // Horómetros
+                await NubeHorometros.destroy({ where: { operacion_id: operacionId }, transaction: t });
+                if (data.horometros && data.horometros.length > 0) {
+                    await NubeHorometros.bulkCreate(
+                        data.horometros.map(horo => ({ ...horo, operacion_id: operacionId })),
+                        { transaction: t }
+                    );
+                }
+
+                // Sostenimientos e inter-sostenimientos
+                const sostenimientosAntiguos = await NubeSostenimiento.findAll({
+                    where: { operacion_id: operacionId },
+                    transaction: t
+                });
+                
+                if (sostenimientosAntiguos.length > 0) {
+                    const sostenimientoIds = sostenimientosAntiguos.map(s => s.id);
+                    await NubeInterSostenimiento.destroy({
+                        where: { sostenimiento_id: sostenimientoIds },
+                        transaction: t
+                    });
+                }
+
+                await NubeSostenimiento.destroy({
+                    where: { operacion_id: operacionId },
+                    transaction: t
+                });
+
+                if (data.sostenimientos && data.sostenimientos.length > 0) {
+                    const sostenimientosCreados = await NubeSostenimiento.bulkCreate(
+                        data.sostenimientos.map(sost => ({ ...sost, operacion_id: operacionId })),
+                        { transaction: t }
+                    );
+
+                    const interSostenimientos = data.sostenimientos
+                        .map((sostenimiento, index) => 
+                            (sostenimiento.inter_sostenimientos || []).map(inter => ({
+                                ...inter,
+                                sostenimiento_id: sostenimientosCreados[index].id
+                            }))
+                        )
+                        .flat();
+
+                    if (interSostenimientos.length > 0) {
+                        await NubeInterSostenimiento.bulkCreate(interSostenimientos, { transaction: t });
+                    }
+                }
+
+                resultados.push(resultadoOperacion);
+            } catch (error) {
+                resultadoOperacion.success = false;
+                resultadoOperacion.message = `Error al actualizar operación de sostenimiento ${operacionId}: ${error.message}`;
+                resultados.push(resultadoOperacion);
+                // Continuamos con las siguientes operaciones
+            }
+        }
+
+        // Verificamos si hubo algún error en alguna operación
+        const errores = resultados.filter(r => !r.success);
+        if (errores.length > 0) {
+            await t.rollback();
+            return res.status(207).json({
+                message: 'Algunas operaciones de sostenimiento no se actualizaron correctamente',
+                resultados,
+                errores: errores.map(e => e.message)
+            });
+        }
+
+        await t.commit();
+        res.status(200).json({
+            message: 'Todas las operaciones de sostenimiento actualizadas correctamente',
+            resultados
+        });
+
+    } catch (error) {
+        await t.rollback();
+        res.status(500).json({ 
+            error: error.message,
+            message: 'Error general en la transacción de operaciones de sostenimiento'
+        });
+    }
+}
+
 async function obtenerOperacionesSostenimiento(req, res) {
     try {
         const operaciones = await NubeOperacion.findAll({
@@ -391,4 +633,4 @@ async function obtenerOperacionesSostenimiento(req, res) {
     }
 }
 
-module.exports = { crearOperacionLargo,actualizarOperacionLargo, obtenerOperacionesLargo, crearOperacionHorizontal, obtenerOperacionesHorizontal, crearOperacionSostenimiento, obtenerOperacionesSostenimiento  };
+module.exports = { crearOperacionLargo,actualizarOperacionLargo, obtenerOperacionesLargo, crearOperacionHorizontal,actualizarOperacionHorizontal, obtenerOperacionesHorizontal, crearOperacionSostenimiento, actualizarOperacionSostenimiento, obtenerOperacionesSostenimiento  };

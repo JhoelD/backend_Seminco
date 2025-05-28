@@ -11,8 +11,9 @@ router.get('/largo', verificarToken, OperacionController.obtenerOperacionesLargo
 // Rutas para Operaciones Horizontales
 router.post('/horizontal', OperacionController.crearOperacionHorizontal);
 router.get('/horizontal', verificarToken, OperacionController.obtenerOperacionesHorizontal);
-
+router.put('/update-horizontal', OperacionController.actualizarOperacionHorizontal);
 // Rutas para Operaciones de Sostenimiento
 router.post('/sostenimiento', OperacionController.crearOperacionSostenimiento);
+router.put('/update-sostenimiento', OperacionController.actualizarOperacionSostenimiento);
 router.get('/sostenimiento', verificarToken, OperacionController.obtenerOperacionesSostenimiento);
 module.exports = router;
