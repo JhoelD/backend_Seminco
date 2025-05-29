@@ -73,6 +73,11 @@ const Usuario = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true, // Puede ser NULL si el usuario no tiene una imagen de firma
     },
+    operaciones_autorizadas: {
+      type: DataTypes.JSON,
+      allowNull: true,
+      defaultValue: {}, // Ninguna operación autorizada por defecto
+    },
   },
   {
     tableName: "usuarios",

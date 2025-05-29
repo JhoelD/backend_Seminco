@@ -32,16 +32,17 @@ exports.obtenerUsuarioPorId = [verificarToken, async (req, res) => {
 
 exports.crearUsuario = [
     verificarToken,
-    upload.single('firma'), // Usa Cloudinary
+    upload.single('firma'),
     async (req, res) => {
         try {
             const {
                 codigo_dni, apellidos, nombres, cargo = null, rol = null, area = null,
                 clasificacion = null, empresa = null, guardia = null,
-                autorizado_equipo = null, correo = null, password
+                autorizado_equipo = null, correo = null, password,
+                operaciones_autorizadas = "{}"
             } = req.body;
 
-            const firma = req.file ? req.file.path : null; // URL de Cloudinary
+            const firma = req.file ? req.file.path : null;
 
             const [existingUser] = await db.query('SELECT * FROM usuarios WHERE codigo_dni = ?', [codigo_dni]);
             if (existingUser.length > 0) return res.status(400).json({ error: 'El usuario ya existe con este DNI' });
@@ -55,9 +56,14 @@ exports.crearUsuario = [
             const hashedPassword = await bcrypt.hash(password, salt);
 
             await db.query(
-                `INSERT INTO usuarios (codigo_dni, apellidos, nombres, cargo, rol, area, clasificacion, empresa, guardia, autorizado_equipo, correo, password, firma, createdAt, updatedAt) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-                [codigo_dni, apellidos, nombres, cargo, rol, area, clasificacion, empresa, guardia, autorizado_equipo, correo, hashedPassword, firma]
+                `INSERT INTO usuarios 
+                (codigo_dni, apellidos, nombres, cargo, rol, area, clasificacion, empresa, guardia, autorizado_equipo, correo, password, firma, operaciones_autorizadas, createdAt, updatedAt) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+                [
+                    codigo_dni, apellidos, nombres, cargo, rol, area, clasificacion,
+                    empresa, guardia, autorizado_equipo, correo, hashedPassword, firma,
+                    JSON.stringify(JSON.parse(operaciones_autorizadas)) // Asegura que sea JSON válido
+                ]
             );
 
             res.status(201).json({ message: 'Usuario creado exitosamente', firma });
@@ -68,19 +74,23 @@ exports.crearUsuario = [
     }
 ];
 
+
 exports.actualizarUsuario = [
     verificarToken,
     upload.single('firma'),
     async (req, res) => {
         const { id } = req.params;
-        const { codigo_dni, apellidos, nombres, cargo, empresa, rol, guardia, autorizado_equipo, correo, password } = req.body;
-        const firma = req.file ? req.file.path : null; // URL de Cloudinary
+        const {
+            codigo_dni, apellidos, nombres, cargo, empresa, rol,
+            guardia, autorizado_equipo, correo, password, operaciones_autorizadas
+        } = req.body;
+
+        const firma = req.file ? req.file.path : null;
 
         try {
             const [rows] = await db.query('SELECT * FROM usuarios WHERE id = ?', [id]);
             if (rows.length === 0) return res.status(404).json({ error: 'Usuario no encontrado' });
 
-            // Validación del campo rol
             if (rol && !['admin', 'user', 'supervisor'].includes(rol)) {
                 return res.status(400).json({ error: 'Rol no válido. Los valores permitidos son: admin, user, supervisor' });
             }
@@ -89,10 +99,9 @@ exports.actualizarUsuario = [
             const queryParams = [codigo_dni, apellidos, nombres, cargo, rol, empresa, guardia, autorizado_equipo, correo];
 
             if (firma) {
-                // **Eliminar la firma anterior de Cloudinary**
                 if (rows[0].firma) {
                     const firmaUrl = rows[0].firma;
-                    const publicId = firmaUrl.split('/').pop().split('.')[0]; // Obtener el public_id de Cloudinary
+                    const publicId = firmaUrl.split('/').pop().split('.')[0];
                     await cloudinary.uploader.destroy(`firmas/${publicId}`);
                 }
 
@@ -105,6 +114,11 @@ exports.actualizarUsuario = [
                 const hashedPassword = await bcrypt.hash(password, salt);
                 query += `, password = ?`;
                 queryParams.push(hashedPassword);
+            }
+
+            if (operaciones_autorizadas) {
+                query += `, operaciones_autorizadas = ?`;
+                queryParams.push(JSON.stringify(JSON.parse(operaciones_autorizadas)));
             }
 
             query += ` WHERE id = ?`;
@@ -143,24 +157,46 @@ exports.eliminarUsuario = [verificarToken, async (req, res) => {
 }];
 
 
-exports.obtenerPerfil = [verificarToken, async (req, res) => {
-    try {
-        const { id } = req.user;
+exports.obtenerPerfil = [
+    verificarToken,
+    async (req, res) => {
+        try {
+            const { id } = req.user;
 
-        const [rows] = await db.query(
-            'SELECT id, codigo_dni, apellidos, nombres, cargo, empresa, guardia, autorizado_equipo, correo, firma, rol FROM usuarios WHERE id = ?',
-            [id]
-        );
+            const [rows] = await db.query(
+                `SELECT id, codigo_dni, apellidos, nombres, cargo, empresa, guardia,
+                autorizado_equipo, correo, firma, rol, operaciones_autorizadas
+                FROM usuarios WHERE id = ?`,
+                [id]
+            );
 
-        if (rows.length === 0) return res.status(404).json({ error: 'Usuario no encontrado' });
+            if (rows.length === 0) return res.status(404).json({ error: 'Usuario no encontrado' });
 
-        res.status(200).json(rows[0]);
-    } catch (error) {
-        console.error('Error al obtener perfil del usuario:', error.message);
-        res.status(500).json({ error: 'Error al obtener perfil del usuario' });
+            res.status(200).json(rows[0]);
+        } catch (error) {
+            console.error('Error al obtener perfil del usuario:', error.message);
+            res.status(500).json({ error: 'Error al obtener perfil del usuario' });
+        }
     }
-}];
+];
 
+exports.obtenerUsuarioPorId = [
+    verificarToken,
+    async (req, res) => {
+        const { id } = req.params;
+        try {
+            const [rows] = await db.query(
+                `SELECT * FROM usuarios WHERE id = ?`,
+                [id]
+            );
+            if (rows.length === 0) return res.status(404).json({ error: 'Usuario no encontrado' });
+            res.status(200).json(rows[0]);
+        } catch (error) {
+            console.error('Error al obtener los datos:', error.message);
+            res.status(500).json({ error: 'Error al obtener los datos' });
+        }
+    }
+];
 
 exports.actualizarFirma = [
     verificarToken,
@@ -216,6 +252,35 @@ exports.actualizarFirma = [
         } catch (error) {
             console.error('Error al actualizar la firma:', error);
             res.status(500).json({ error: 'Error al actualizar la firma' });
+        }
+    }
+];
+
+exports.actualizarOperacionesAutorizadas = [
+    verificarToken,
+    async (req, res) => {
+        const { id } = req.params;
+        const { operaciones_autorizadas } = req.body;
+
+        if (!operaciones_autorizadas || typeof operaciones_autorizadas !== 'object') {
+            return res.status(400).json({ error: 'Se requiere un objeto JSON válido para operaciones_autorizadas' });
+        }
+
+        try {
+            const [rows] = await db.query('SELECT * FROM usuarios WHERE id = ?', [id]);
+            if (rows.length === 0) {
+                return res.status(404).json({ error: 'Usuario no encontrado' });
+            }
+
+            await db.query(
+                'UPDATE usuarios SET operaciones_autorizadas = ?, updatedAt = NOW() WHERE id = ?',
+                [JSON.stringify(operaciones_autorizadas), id]
+            );
+
+            res.status(200).json({ message: 'Operaciones autorizadas actualizadas exitosamente' });
+        } catch (error) {
+            console.error('Error al actualizar operaciones autorizadas:', error.message);
+            res.status(500).json({ error: 'Error al actualizar operaciones autorizadas' });
         }
     }
 ];

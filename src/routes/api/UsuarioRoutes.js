@@ -8,6 +8,8 @@ router.get('/usuarios/:id', usuarioController.obtenerUsuarioPorId);
 
 router.post('/usuarios', usuarioController.crearUsuario);
 
+router.put('/usuarios/:id/operaciones', usuarioController.actualizarOperacionesAutorizadas);
+
 router.put('/usuarios/:id', usuarioController.actualizarUsuario);
 
 router.delete('/usuarios/:id', usuarioController.eliminarUsuario);
