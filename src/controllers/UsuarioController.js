@@ -42,6 +42,9 @@ exports.crearUsuario = [
                 operaciones_autorizadas = "{}"
             } = req.body;
 
+            console.log('🧾 operaciones_autorizadas:', operaciones_autorizadas);
+            console.log('📂 Tipo de operaciones_autorizadas:', typeof operaciones_autorizadas);
+
             const firma = req.file ? req.file.path : null;
 
             const [existingUser] = await db.query('SELECT * FROM usuarios WHERE codigo_dni = ?', [codigo_dni]);
@@ -55,6 +58,16 @@ exports.crearUsuario = [
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
 
+            // Aseguramos que se convierte en string solo si no lo es ya
+            let operacionesStr;
+            if (typeof operaciones_autorizadas === 'string') {
+                operacionesStr = JSON.stringify(JSON.parse(operaciones_autorizadas));
+            } else if (typeof operaciones_autorizadas === 'object') {
+                operacionesStr = JSON.stringify(operaciones_autorizadas);
+            } else {
+                operacionesStr = '{}';
+            }
+
             await db.query(
                 `INSERT INTO usuarios 
                 (codigo_dni, apellidos, nombres, cargo, rol, area, clasificacion, empresa, guardia, autorizado_equipo, correo, password, firma, operaciones_autorizadas, createdAt, updatedAt) 
@@ -62,14 +75,14 @@ exports.crearUsuario = [
                 [
                     codigo_dni, apellidos, nombres, cargo, rol, area, clasificacion,
                     empresa, guardia, autorizado_equipo, correo, hashedPassword, firma,
-                    JSON.stringify(JSON.parse(operaciones_autorizadas)) // Asegura que sea JSON válido
+                    operacionesStr
                 ]
             );
 
             res.status(201).json({ message: 'Usuario creado exitosamente', firma });
         } catch (error) {
-            console.error('Error al crear el usuario:', error.message);
-            res.status(500).json({ error: 'Error al crear el usuario' });
+            console.error('❌ Error al crear el usuario:', error);
+            res.status(500).json({ error: 'Error al crear el usuario', details: error.message });
         }
     }
 ];
