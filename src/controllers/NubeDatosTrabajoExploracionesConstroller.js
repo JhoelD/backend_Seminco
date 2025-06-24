@@ -1,4 +1,3 @@
-// Corrección en la importación de modelos
 const { 
     NubeDatosTrabajoExploraciones,
     NubeDespacho,
@@ -26,9 +25,17 @@ async function crearExploracionCompleta(req, res) {
         // 1. Crear datos principales (excluyendo relaciones e IDs)
         const { id, despachos, devoluciones, ...datosTrabajoData } = requestData;
 
+        // Asegurar que los nuevos campos tengan valores por defecto si no vienen en la petición
+        const datosTrabajoCompletos = {
+            ...datosTrabajoData,
+            envio: datosTrabajoData.envio || 0,
+            estado: datosTrabajoData.estado || 'Creado',
+            cerrado: datosTrabajoData.cerrado || 0
+        };
+
         let datosTrabajo;
         try {
-            datosTrabajo = await NubeDatosTrabajoExploraciones.create(datosTrabajoData, { transaction: t });
+            datosTrabajo = await NubeDatosTrabajoExploraciones.create(datosTrabajoCompletos, { transaction: t });
         } catch (dbError) {
             throw new Error(`Error al insertar en NubeDatosTrabajoExploraciones: ${dbError.message}`);
         }
@@ -39,12 +46,16 @@ async function crearExploracionCompleta(req, res) {
                 await Promise.all(despachos.map(async (despacho) => {
                     const { id: despachoId, datos_trabajo_id, detalles_materiales = [], detalles_explosivos = [], ...datosDespacho } = despacho;
 
+                    // Asegurar que el campo observaciones esté presente
+                    const despachoCompleto = {
+                        ...datosDespacho,
+                        datos_trabajo_id: datosTrabajo.id,
+                        observaciones: datosDespacho.observaciones || null
+                    };
+
                     let despachoCreado;
                     try {
-                        despachoCreado = await NubeDespacho.create({
-                            ...datosDespacho,
-                            datos_trabajo_id: datosTrabajo.id
-                        }, { transaction: t });
+                        despachoCreado = await NubeDespacho.create(despachoCompleto, { transaction: t });
                     } catch (dbError) {
                         throw new Error(`Error al insertar en NubeDespacho: ${dbError.message}`);
                     }
@@ -90,12 +101,16 @@ async function crearExploracionCompleta(req, res) {
                 await Promise.all(devoluciones.map(async (devolucion) => {
                     const { id: devolucionId, datos_trabajo_id, detalles_materiales = [], detalles_explosivos = [], ...datosDevolucion } = devolucion;
 
+                    // Asegurar que el campo observaciones esté presente
+                    const devolucionCompleta = {
+                        ...datosDevolucion,
+                        datos_trabajo_id: datosTrabajo.id,
+                        observaciones: datosDevolucion.observaciones || null
+                    };
+
                     let devolucionCreada;
                     try {
-                        devolucionCreada = await NubeDevoluciones.create({
-                            ...datosDevolucion,
-                            datos_trabajo_id: datosTrabajo.id
-                        }, { transaction: t });
+                        devolucionCreada = await NubeDevoluciones.create(devolucionCompleta, { transaction: t });
                     } catch (dbError) {
                         throw new Error(`Error al insertar en NubeDevoluciones: ${dbError.message}`);
                     }
@@ -138,7 +153,9 @@ async function crearExploracionCompleta(req, res) {
         await t.commit();
         res.status(201).json({
             message: 'Exploración creada con éxito',
-            id: datosTrabajo.id
+            id: datosTrabajo.id,
+            envio: datosTrabajo.envio,
+            estado: datosTrabajo.estado
         });
 
     } catch (error) {
@@ -152,14 +169,25 @@ async function crearExploracionCompleta(req, res) {
     }
 }
 
-
 async function obtenerExploracionesCompletas(req, res) {
     try {
         const { id } = req.params;
+        const { envio, cerrado, empresa } = req.query;
 
         let whereCondition = {};
         if (id) {
             whereCondition.id = id;
+        }
+        
+        // Filtros adicionales para los nuevos campos
+        if (envio !== undefined) {
+            whereCondition.envio = envio;
+        }
+        if (cerrado !== undefined) {
+            whereCondition.cerrado = cerrado;
+        }
+        if (empresa) {
+            whereCondition.empresa = empresa;
         }
 
         const exploraciones = await NubeDatosTrabajoExploraciones.findAll({

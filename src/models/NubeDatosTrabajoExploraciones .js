@@ -15,11 +15,16 @@ const NubeDatosTrabajoExploraciones = sequelize.define('nube_DatosTrabajoExplora
     zona: { type: DataTypes.STRING, allowNull: false },
     tipo_labor: { type: DataTypes.STRING, allowNull: false },
     labor: { type: DataTypes.STRING, allowNull: false },
+    ala: { type: DataTypes.STRING }, // Nuevo campo
     veta: { type: DataTypes.STRING, allowNull: false },
     nivel: { type: DataTypes.STRING, allowNull: false },
     tipo_perforacion: { type: DataTypes.STRING, allowNull: false },
     estado: { type: DataTypes.STRING, defaultValue: 'Creado' },
-    cerrado: { type: DataTypes.INTEGER, defaultValue: 0 }
+    cerrado: { type: DataTypes.INTEGER, defaultValue: 0 },
+    envio: { type: DataTypes.INTEGER, defaultValue: 0 }, // Nuevo campo
+    semanaDefault: { type: DataTypes.STRING }, // Nuevo campo
+    semanaSelect: { type: DataTypes.STRING }, // Nuevo campo
+    empresa: { type: DataTypes.STRING } // Nuevo campo
 }, {
     tableName: 'nube_datos_trabajo_exploraciones',
     timestamps: true,
@@ -33,7 +38,8 @@ const NubeDespacho = sequelize.define('nube_Despacho', {
         autoIncrement: true
     },
     mili_segundo: { type: DataTypes.FLOAT, allowNull: false },
-    medio_segundo: { type: DataTypes.FLOAT, allowNull: false }
+    medio_segundo: { type: DataTypes.FLOAT, allowNull: false },
+    observaciones: { type: DataTypes.TEXT } // Nuevo campo
 }, {
     tableName: 'nube_despacho',
     timestamps: true,
@@ -61,7 +67,8 @@ const NubeDevoluciones = sequelize.define('nube_Devoluciones', {
         autoIncrement: true
     },
     mili_segundo: { type: DataTypes.FLOAT, allowNull: false },
-    medio_segundo: { type: DataTypes.FLOAT, allowNull: false }
+    medio_segundo: { type: DataTypes.FLOAT, allowNull: false },
+    observaciones: { type: DataTypes.TEXT } // Nuevo campo
 }, {
     tableName: 'nube_devoluciones',
     timestamps: true,
@@ -111,7 +118,7 @@ const NubeDetalleDevolucionesExplosivos = sequelize.define('nube_DetalleDevoluci
     timestamps: true,
 });
 
-// Establecer relaciones
+// Establecer relaciones (sin cambios)
 NubeDatosTrabajoExploraciones.hasMany(NubeDespacho, { 
     foreignKey: 'datos_trabajo_id', 
     as: 'despachos',
