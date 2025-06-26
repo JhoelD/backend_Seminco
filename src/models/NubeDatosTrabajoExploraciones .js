@@ -24,7 +24,8 @@ const NubeDatosTrabajoExploraciones = sequelize.define('nube_DatosTrabajoExplora
     envio: { type: DataTypes.INTEGER, defaultValue: 0 }, // Nuevo campo
     semanaDefault: { type: DataTypes.STRING }, // Nuevo campo
     semanaSelect: { type: DataTypes.STRING }, // Nuevo campo
-    empresa: { type: DataTypes.STRING } // Nuevo campo
+    empresa: { type: DataTypes.STRING }, // Nuevo campo
+    seccion: { type: DataTypes.STRING }
 }, {
     tableName: 'nube_datos_trabajo_exploraciones',
     timestamps: true,
