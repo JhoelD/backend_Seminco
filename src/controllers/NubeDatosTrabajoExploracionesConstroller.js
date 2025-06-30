@@ -243,7 +243,66 @@ async function obtenerExploracionesCompletas(req, res) {
     }
 }
 
+async function actualizarMedicionExploracion(req, res) {
+    const t = await sequelize.transaction();
+
+    try {
+        const { id } = req.params;
+        const { medicion } = req.body;
+
+        // Validaciones básicas
+        if (!id) {
+            throw new Error('Se requiere el ID de la exploración');
+        }
+
+        if (medicion === undefined || medicion === null) {
+            throw new Error('El campo medicion es requerido');
+        }
+
+        // Verificar que la exploración existe
+        const exploracion = await NubeDatosTrabajoExploraciones.findByPk(id, { transaction: t });
+        
+        if (!exploracion) {
+            throw new Error('Exploración no encontrada');
+        }
+
+        // Actualizar solo el campo medicion
+        await NubeDatosTrabajoExploraciones.update(
+            { medicion },
+            {
+                where: { id },
+                transaction: t,
+                fields: ['medicion'] // Solo actualiza este campo
+            }
+        );
+
+        await t.commit();
+        
+        // Obtener el registro actualizado para devolverlo
+        const exploracionActualizada = await NubeDatosTrabajoExploraciones.findByPk(id);
+        
+        res.status(200).json({
+            message: 'Medición actualizada correctamente',
+            data: {
+                id: exploracionActualizada.id,
+                medicion: exploracionActualizada.medicion,
+                estado: exploracionActualizada.estado
+            }
+        });
+
+    } catch (error) {
+        await t.rollback();
+        console.error('Error al actualizar medición:', error);
+        
+        res.status(500).json({
+            error: 'Error al actualizar medición',
+            details: error.message
+        });
+    }
+}
+
 module.exports = { 
     crearExploracionCompleta, 
-    obtenerExploracionesCompletas 
+    obtenerExploracionesCompletas,
+    actualizarMedicionExploracion
 };
