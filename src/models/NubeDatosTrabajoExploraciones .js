@@ -31,7 +31,7 @@ const NubeDatosTrabajoExploraciones = sequelize.define('nube_DatosTrabajoExplora
     tableName: 'nube_datos_trabajo_exploraciones',
     timestamps: true,
 });
-
+ 
 // Modelo nube_Despacho
 const NubeDespacho = sequelize.define('nube_Despacho', {
     id: {

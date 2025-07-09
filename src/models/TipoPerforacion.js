@@ -14,7 +14,12 @@ const TipoPerforacion = sequelize.define('TipoPerforacion', {
     proceso: {
         type: DataTypes.STRING,
         allowNull: true // Permitir valores nulos
-    }
+    },
+    permitido_medicion: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 0
+  }
 }, {
     tableName: 'tipoperforacions',
     timestamps: false

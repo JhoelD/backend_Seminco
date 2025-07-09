@@ -169,6 +169,44 @@ async function crearExploracionCompleta(req, res) {
     }
 }
 
+async function marcarComoUsadosEnMediciones(req, res) {
+  const t = await sequelize.transaction();
+
+  try {
+    let { ids } = req.body;
+
+    // Asegurar que 'ids' sea un array
+    if (!Array.isArray(ids)) {
+      ids = [ids];
+    }
+
+    if (ids.length === 0) {
+      return res.status(400).json({ message: 'No se recibieron IDs para actualizar.' });
+    }
+
+    // Actualizar registros
+    const resultados = await NubeDatosTrabajoExploraciones.update(
+      { medicion: 1 },
+      { where: { id: ids }, transaction: t }
+    );
+
+    await t.commit();
+
+    res.status(200).json({
+      message: 'Registros actualizados correctamente',
+      cantidad_actualizada: resultados[0] // devuelve cantidad de filas afectadas
+    });
+
+  } catch (error) {
+    await t.rollback();
+    console.error('Error en marcarComoUsadosEnMediciones:', error);
+    res.status(500).json({
+      message: 'Error al actualizar los registros para mediciones',
+      error: error.message
+    });
+  }
+}
+
 async function obtenerExploracionesCompletas(req, res) {
     try {
         const { id } = req.params;
@@ -304,5 +342,6 @@ async function actualizarMedicionExploracion(req, res) {
 module.exports = { 
     crearExploracionCompleta, 
     obtenerExploracionesCompletas,
-    actualizarMedicionExploracion
+    actualizarMedicionExploracion,
+    marcarComoUsadosEnMediciones
 };

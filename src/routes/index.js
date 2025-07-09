@@ -24,7 +24,9 @@ const metas = require('../routes/api/metaRoutes');
 const metaslargo = require('../routes/api/metaLargoRoutes');
 const metassoste = require('../routes/api/metaSostenimientoRoutes');
 const mediciones = require('../routes/api/perforacionesMediciones');
-
+const toneladas = require('../routes/api/toneladasRoutes');
+const mediHorizontal = require('../routes/api/medicionesHorizontalRoutes');
+const mediLargo = require('../routes/api/medicionesLargoRoutes');
 router.use('/usuarios', usuariosRoutes);  
 router.use('/auth', authRoutes);  
 router.use('/PlanMineral', formatoPlanMineralRoutes); 
@@ -47,5 +49,8 @@ router.use('/metas-horizontal', metas);
 router.use('/metas-largo', metaslargo); 
 router.use('/metas-sostenimiento', metassoste); 
 router.use('/mediciones', mediciones); 
+router.use('/toneladas', toneladas); 
+router.use('/medicion-tal-largo', mediLargo); 
+router.use('/medicion-tal-horizontal', mediHorizontal); 
 
 module.exports = router;

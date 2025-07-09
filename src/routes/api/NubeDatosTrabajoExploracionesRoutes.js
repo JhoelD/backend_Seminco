@@ -9,6 +9,8 @@ router.get('/', verificarToken, tranajoExploController.obtenerExploracionesCompl
 
 router.get('/:id', verificarToken, tranajoExploController.obtenerExploracionesCompletas);
 
-router.put('/:id/medicion', verificarToken, tranajoExploController.actualizarMedicionExploracion);
+router.put('/:id/medicion', tranajoExploController.actualizarMedicionExploracion);
+
+router.put('/Explo-medicion', tranajoExploController.marcarComoUsadosEnMediciones);
 
 module.exports = router; 
