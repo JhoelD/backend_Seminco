@@ -29,25 +29,44 @@ const getMedicionHorizontalById = async (req, res) => {
 // Crear una medición horizontal
 const createMedicionHorizontal = async (req, res) => {
   try {
-    const { idnube } = req.body;
+    const data = req.body;
 
-    // Verificar si ya existe un registro con ese idnube
+    // Si es un array de mediciones
+    if (Array.isArray(data)) {
+      // Validar duplicados antes de insertar
+      for (const medicion of data) {
+        if (medicion.idnube) {
+          const existente = await MedicionesHorizontal.findOne({ where: { idnube: medicion.idnube } });
+          if (existente) {
+            return res.status(409).json({
+              message: `Ya existe una medición horizontal con idnube ${medicion.idnube}`
+            });
+          }
+        }
+      }
+
+      const nuevasMediciones = await MedicionesHorizontal.bulkCreate(data);
+      return res.status(201).json(nuevasMediciones);
+    }
+
+    // Si es un solo objeto
+    const { idnube } = data;
     if (idnube) {
       const existente = await MedicionesHorizontal.findOne({ where: { idnube } });
       if (existente) {
-        return res.status(409).json({ 
-          message: `Ya existe una medición horizontal con idnube ${idnube}` 
+        return res.status(409).json({
+          message: `Ya existe una medición horizontal con idnube ${idnube}`
         });
       }
     }
 
-    const nuevaMedicion = await MedicionesHorizontal.create(req.body);
+    const nuevaMedicion = await MedicionesHorizontal.create(data);
     res.status(201).json(nuevaMedicion);
   } catch (error) {
     console.error("Error en createMedicionHorizontal:", error);
-    res.status(500).json({ 
-      message: 'Error al crear la medición horizontal', 
-      error: error.message 
+    res.status(500).json({
+      message: 'Error al crear la medición horizontal',
+      error: error.message
     });
   }
 };
