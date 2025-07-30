@@ -3,7 +3,7 @@ const router = express.Router();
 const medicionesLargoController = require('../../controllers/medicionesLargoController');
 const verificarToken = require('../../middleware/auth');
 
-router.get('/', verificarToken, medicionesLargoController.getAllMedicionesLargo);
+router.get('/', medicionesLargoController.getAllMedicionesLargo);
 
 router.get('/:id', verificarToken, medicionesLargoController.getMedicionLargoById);
 

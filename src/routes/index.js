@@ -27,6 +27,9 @@ const mediciones = require('../routes/api/perforacionesMediciones');
 const toneladas = require('../routes/api/toneladasRoutes');
 const mediHorizontal = require('../routes/api/medicionesHorizontalRoutes');
 const mediLargo = require('../routes/api/medicionesLargoRoutes');
+const semanas = require('../routes/api/semanasRoutes');
+const pdfOperacion = require('../routes/api/pdfRoutes');
+
 router.use('/usuarios', usuariosRoutes);  
 router.use('/auth', authRoutes);  
 router.use('/PlanMineral', formatoPlanMineralRoutes); 
@@ -52,5 +55,7 @@ router.use('/mediciones', mediciones);
 router.use('/toneladas', toneladas); 
 router.use('/medicion-tal-largo', mediLargo); 
 router.use('/medicion-tal-horizontal', mediHorizontal); 
+router.use('/semana-personali', semanas); 
+router.use('/pdf-operacion', pdfOperacion); 
 
 module.exports = router;
