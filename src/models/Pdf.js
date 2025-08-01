@@ -21,6 +21,18 @@ const Pdf = sequelize.define('Pdf', {
     url_pdf: {
         type: DataTypes.STRING(255), // Longitud estándar para URLs
         allowNull: false
+    },
+    tipo_labor: {
+        type: DataTypes.TEXT,
+        allowNull: true // Cambia a false si es requerido
+    },
+    labor: {
+        type: DataTypes.TEXT,
+        allowNull: true // Cambia a false si es requerido
+    },
+    ala: {
+        type: DataTypes.TEXT,
+        allowNull: true // Cambia a false si es requerido
     }
 }, {
     tableName: 'pdfs',

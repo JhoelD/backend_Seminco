@@ -6,9 +6,12 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'pdf-operaciones',
-    resource_type: 'auto', // <-- CAMBIAR AQUÍ
-    format: async (req, file) => 'pdf',
-    public_id: (req, file) => `pdf_operacion_${Date.now()}`
+    resource_type: 'raw', // <-- CAMBIAR de 'auto' a 'raw'
+    format: 'pdf',
+    public_id: (req, file) => {
+      // Generar un ID más consistente
+      return `doc_${Date.now()}`;
+    }
   }
 });
 
