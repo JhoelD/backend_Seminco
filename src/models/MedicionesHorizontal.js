@@ -64,6 +64,16 @@ const MedicionesHorizontal = sequelize.define('MedicionesHorizontal', {
     type: DataTypes.INTEGER,
     allowNull: true,
     unique: true // ✅ aseguras que no haya duplicados
+  },
+  no_aplica: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 0
+  },
+  remanente: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 0
   }
 }, {
   tableName: 'mediciones_horizontal',

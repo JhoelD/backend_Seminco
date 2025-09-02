@@ -11,6 +11,21 @@ const getAllMedicionesHorizontal = async (req, res) => {
   }
 };
 
+const getMedicionesConRemanente = async (req, res) => {
+  try {
+    const mediciones = await MedicionesHorizontal.findAll({
+      where: { remanente: 1 }
+    });
+    res.status(200).json(mediciones);
+  } catch (error) {
+    console.error("Error en getMedicionesConRemanente:", error);
+    res.status(500).json({
+      message: 'Error al obtener las mediciones con remanente',
+      error: error.message
+    });
+  }
+};
+
 // Obtener una medición horizontal por ID
 const getMedicionHorizontalById = async (req, res) => {
   try {
@@ -26,17 +41,18 @@ const getMedicionHorizontalById = async (req, res) => {
   }
 };
 
-// Crear una medición horizontal
 const createMedicionHorizontal = async (req, res) => {
   try {
     const data = req.body;
 
-    // Si es un array de mediciones
+    // ✅ Si es un array de mediciones
     if (Array.isArray(data)) {
       // Validar duplicados antes de insertar
       for (const medicion of data) {
         if (medicion.idnube) {
-          const existente = await MedicionesHorizontal.findOne({ where: { idnube: medicion.idnube } });
+          const existente = await MedicionesHorizontal.findOne({
+            where: { idnube: medicion.idnube }
+          });
           if (existente) {
             return res.status(409).json({
               message: `Ya existe una medición horizontal con idnube ${medicion.idnube}`
@@ -45,23 +61,32 @@ const createMedicionHorizontal = async (req, res) => {
         }
       }
 
-      const nuevasMediciones = await MedicionesHorizontal.bulkCreate(data);
+      // ✅ Eliminar "id" pero mantener "idnube"
+      const cleanData = data.map(m => {
+        const { id, ...rest } = m;
+        return rest;
+      });
+
+      const nuevasMediciones = await MedicionesHorizontal.bulkCreate(cleanData);
       return res.status(201).json(nuevasMediciones);
     }
 
-    // Si es un solo objeto
-    const { idnube } = data;
-    if (idnube) {
-      const existente = await MedicionesHorizontal.findOne({ where: { idnube } });
+    // ✅ Si es un solo objeto
+    const { id, ...restData } = data; // quitamos id si viene
+    if (restData.idnube) {
+      const existente = await MedicionesHorizontal.findOne({
+        where: { idnube: restData.idnube }
+      });
       if (existente) {
         return res.status(409).json({
-          message: `Ya existe una medición horizontal con idnube ${idnube}`
+          message: `Ya existe una medición horizontal con idnube ${restData.idnube}`
         });
       }
     }
 
-    const nuevaMedicion = await MedicionesHorizontal.create(data);
+    const nuevaMedicion = await MedicionesHorizontal.create(restData);
     res.status(201).json(nuevaMedicion);
+
   } catch (error) {
     console.error("Error en createMedicionHorizontal:", error);
     res.status(500).json({
@@ -111,5 +136,6 @@ module.exports = {
   getMedicionHorizontalById,
   createMedicionHorizontal,
   updateMedicionHorizontal,
-  deleteMedicionHorizontal
+  deleteMedicionHorizontal,
+  getMedicionesConRemanente
 };
