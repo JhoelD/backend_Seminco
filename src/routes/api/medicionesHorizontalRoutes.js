@@ -5,7 +5,7 @@ const verificarToken = require('../../middleware/auth');
 
 router.get('/', verificarToken, medicionesHorizontalController.getAllMedicionesHorizontal);
 
-router.get('/', verificarToken, medicionesHorizontalController.getMedicionesConRemanente);
+router.get('/remanente',medicionesHorizontalController.getMedicionesConRemanente);
 
 router.get('/:id', verificarToken, medicionesHorizontalController.getMedicionHorizontalById);
 
