@@ -74,6 +74,10 @@ const MedicionesHorizontal = sequelize.define('MedicionesHorizontal', {
     type: DataTypes.INTEGER,
     allowNull: false,
     defaultValue: 0
+  },
+  semana: { 
+    type: DataTypes.STRING,
+    allowNull: true
   }
 }, {
   tableName: 'mediciones_horizontal',

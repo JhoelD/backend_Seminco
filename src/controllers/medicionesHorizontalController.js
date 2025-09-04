@@ -114,6 +114,33 @@ const updateMedicionHorizontal = async (req, res) => {
   }
 };
 
+const bulkUpdateMediciones = async (req, res) => {
+  try {
+    // Espera algo como: [{id:1, campo1:'a'}, {id:2, campo1:'b'}]
+    const items = req.body;
+
+    if (!Array.isArray(items)) {
+      return res.status(400).json({ message: 'Se esperaba un array de registros' });
+    }
+
+    const results = [];
+
+    for (const item of items) {
+      if (!item.id) continue; // si no hay id, lo saltamos
+      const medicion = await MedicionesHorizontal.findByPk(item.id);
+      if (!medicion) continue;
+
+      await medicion.update(item); // item puede traer varios campos
+      results.push(medicion);
+    }
+
+    res.status(200).json({ updated: results.length, registros: results });
+  } catch (error) {
+    console.error('Error en bulkUpdateMediciones:', error);
+    res.status(500).json({ message: 'Error al actualizar mediciones', error: error.message });
+  }
+};
+
 // Eliminar una medición horizontal
 const deleteMedicionHorizontal = async (req, res) => {
   try {
@@ -137,5 +164,6 @@ module.exports = {
   createMedicionHorizontal,
   updateMedicionHorizontal,
   deleteMedicionHorizontal,
-  getMedicionesConRemanente
+  getMedicionesConRemanente,
+  bulkUpdateMediciones
 };
