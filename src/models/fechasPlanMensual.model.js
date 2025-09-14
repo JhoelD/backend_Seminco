@@ -8,7 +8,7 @@ const FechasPlanMensual = sequelize.define("Fechas_plan_mensual", {
     validate: {
       isIn: [[
         "ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO",
-        "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"
+        "JULIO", "AGOSTO", "SEPTIEMBRE", "SETIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"
       ]],
     },
   },
