@@ -207,71 +207,65 @@ async function marcarComoUsadosEnMediciones(req, res) {
   }
 }
 
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function obtenerExploracionesCompletas(req, res) {
     try {
-        const { id } = req.params;
-        const { envio, cerrado, empresa } = req.query;
+        const { limit = 100 } = req.query;
 
-        let whereCondition = {};
-        if (id) {
-            whereCondition.id = id;
-        }
-        
-        // Filtros adicionales para los nuevos campos
-        if (envio !== undefined) {
-            whereCondition.envio = envio;
-        }
-        if (cerrado !== undefined) {
-            whereCondition.cerrado = cerrado;
-        }
-        if (empresa) {
-            whereCondition.empresa = empresa;
+        // 1️⃣ Obtener total para calcular páginas
+        const total = await NubeDatosTrabajoExploraciones.count();
+        const totalPages = Math.ceil(total / limit);
+
+        let allData = [];
+
+        // 2️⃣ Bucle con delay
+        for (let page = 1; page <= totalPages; page++) {
+            const offset = (page - 1) * limit;
+
+            const rows = await NubeDatosTrabajoExploraciones.findAll({
+                include: [
+                    {
+                        model: NubeDespacho,
+                        as: 'despachos',
+                        include: [
+                            { model: NubeDespachoDetalle, as: 'detalles' },
+                            { model: NubeDetalleDespachoExplosivos, as: 'detalles_explosivos' }
+                        ]
+                    },
+                    {
+                        model: NubeDevoluciones,
+                        as: 'devoluciones',
+                        include: [
+                            { model: NubeDevolucionDetalle, as: 'detalles' },
+                            { model: NubeDetalleDevolucionesExplosivos, as: 'detalles_explosivos' }
+                        ]
+                    }
+                ],
+                order: [
+                    ['createdAt', 'DESC'],
+                    [{ model: NubeDespacho, as: 'despachos' }, 'createdAt', 'ASC'],
+                    [{ model: NubeDevoluciones, as: 'devoluciones' }, 'createdAt', 'ASC']
+                ],
+                limit: parseInt(limit),
+                offset
+            });
+
+            allData = allData.concat(rows);
+
+            // ⏳ Esperar 200ms entre cada query
+            await delay(200);
         }
 
-        const exploraciones = await NubeDatosTrabajoExploraciones.findAll({
-            where: whereCondition,
-            include: [
-                {
-                    model: NubeDespacho,
-                    as: 'despachos',
-                    include: [
-                        {
-                            model: NubeDespachoDetalle,
-                            as: 'detalles'
-                        },
-                        {
-                            model: NubeDetalleDespachoExplosivos,
-                            as: 'detalles_explosivos'
-                        }
-                    ]
-                },
-                {
-                    model: NubeDevoluciones,
-                    as: 'devoluciones',
-                    include: [
-                        {
-                            model: NubeDevolucionDetalle,
-                            as: 'detalles'
-                        },
-                        {
-                            model: NubeDetalleDevolucionesExplosivos,
-                            as: 'detalles_explosivos'
-                        }
-                    ]
-                }
-            ],
-            order: [
-                ['createdAt', 'DESC'],
-                [{ model: NubeDespacho, as: 'despachos' }, 'createdAt', 'ASC'],
-                [{ model: NubeDevoluciones, as: 'devoluciones' }, 'createdAt', 'ASC']
-            ]
+        // 3️⃣ Devolver todo junto
+        res.status(200).json({
+            total,
+            totalPages,
+            data: allData
         });
 
-        if (id && exploraciones.length === 0) {
-            return res.status(404).json({ message: 'Exploración no encontrada' });
-        }
-
-        res.status(200).json(id ? exploraciones[0] : exploraciones);
     } catch (error) {
         console.error('Error al obtener exploraciones:', error);
         res.status(500).json({ 
@@ -280,6 +274,8 @@ async function obtenerExploracionesCompletas(req, res) {
         });
     }
 }
+
+
 
 async function actualizarMedicionExploracion(req, res) {
     const t = await sequelize.transaction();
