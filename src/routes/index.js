@@ -29,6 +29,11 @@ const mediHorizontal = require('../routes/api/medicionesHorizontalRoutes');
 const mediLargo = require('../routes/api/medicionesLargoRoutes');
 const semanas = require('../routes/api/semanasRoutes');
 const pdfOperacion = require('../routes/api/pdfRoutes');
+const TipoAcero = require('../routes/api/procesoAceroRoutes');
+const JefeGuardiaAcero = require('../routes/api/jefeGuardiaAceroRoutes');
+const OperarioAcero = require('../routes/api/operadorAceroRoutes');
+const IngresoAceros = require('../routes/api/ingresoAceros');
+const SalidasAceros = require('../routes/api/salidasAceros');
 
 router.use('/usuarios', usuariosRoutes);  
 router.use('/auth', authRoutes);  
@@ -57,5 +62,10 @@ router.use('/medicion-tal-largo', mediLargo);
 router.use('/medicion-tal-horizontal', mediHorizontal); 
 router.use('/semana-personali', semanas); 
 router.use('/pdf-operacion', pdfOperacion); 
+router.use('/tipo-acero', TipoAcero); 
+router.use('/operario-acero', OperarioAcero); 
+router.use('/jefe-guardia-acero', JefeGuardiaAcero); 
+router.use('/ingresos-aceros', IngresoAceros); 
+router.use('/salida-aceros', SalidasAceros); 
 
 module.exports = router;
