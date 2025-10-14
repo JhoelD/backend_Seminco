@@ -9,16 +9,22 @@ const sequelize = require('../config/sequelize');
 
 // 🟢 POST: Registrar operaciones con sus relaciones
 exports.createCarguioData = async (req, res) => {
-  const dataList = req.body; // Puede ser una lista de operaciones (como en Flutter)
+  let dataList = req.body; // Puede ser un objeto o una lista de operaciones
 
-  if (!Array.isArray(dataList) || dataList.length === 0) {
+  // ✅ Permitir que llegue un solo objeto o una lista
+  if (!Array.isArray(dataList)) {
+    dataList = [dataList];
+  }
+
+  // ⚠️ Validar que no venga vacío
+  if (dataList.length === 0) {
     return res.status(400).json({ message: 'No se recibieron datos válidos.' });
   }
 
   const transaction = await sequelize.transaction();
-  
+
   try {
-    const idsOperacionesCreadas = []; // ← Cambio aquí: mismo nombre que el primer controller
+    const idsOperacionesCreadas = [];
 
     for (const data of dataList) {
       const { operacion, estados, horometros, carguios, local_id } = data;
@@ -35,7 +41,7 @@ exports.createCarguioData = async (req, res) => {
       }, { transaction });
 
       const operacion_id = nuevaOperacion.id;
-      idsOperacionesCreadas.push(operacion_id); // ← Cambio aquí: mismo patrón
+      idsOperacionesCreadas.push(operacion_id);
 
       // 🟦 Crear Estados
       if (Array.isArray(estados) && estados.length > 0) {
@@ -80,20 +86,20 @@ exports.createCarguioData = async (req, res) => {
     }
 
     await transaction.commit();
-    
-    // ← Cambio aquí: misma estructura de respuesta
-    return res.status(201).json({ 
-      operaciones_ids: idsOperacionesCreadas 
+
+    return res.status(201).json({
+      operaciones_ids: idsOperacionesCreadas
     });
 
   } catch (error) {
     await transaction.rollback();
     console.error('Error al guardar datos de carguío:', error);
-    return res.status(500).json({ 
-      error: error.message 
+    return res.status(500).json({
+      error: error.message
     });
   }
 };
+
 
 // 🔵 GET: Traer todas las operaciones con sus relaciones
 exports.getAllCarguioData = async (req, res) => {
