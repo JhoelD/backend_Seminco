@@ -16,9 +16,9 @@ exports.createCarguioData = async (req, res) => {
   }
 
   const transaction = await sequelize.transaction();
-
+  
   try {
-    const results = [];
+    const idsOperacionesCreadas = []; // ← Cambio aquí: mismo nombre que el primer controller
 
     for (const data of dataList) {
       const { operacion, estados, horometros, carguios, local_id } = data;
@@ -35,6 +35,7 @@ exports.createCarguioData = async (req, res) => {
       }, { transaction });
 
       const operacion_id = nuevaOperacion.id;
+      idsOperacionesCreadas.push(operacion_id); // ← Cambio aquí: mismo patrón
 
       // 🟦 Crear Estados
       if (Array.isArray(estados) && estados.length > 0) {
@@ -76,38 +77,32 @@ exports.createCarguioData = async (req, res) => {
           }, { transaction });
         }
       }
-
-      results.push({
-        local_id,
-        idNube: operacion_id
-      });
     }
 
     await transaction.commit();
-    return res.status(201).json({
-      message: 'Datos de Carguío registrados correctamente.',
-      resultados: results
+    
+    // ← Cambio aquí: misma estructura de respuesta
+    return res.status(201).json({ 
+      operaciones_ids: idsOperacionesCreadas 
     });
 
   } catch (error) {
     await transaction.rollback();
     console.error('Error al guardar datos de carguío:', error);
-    return res.status(500).json({
-      message: 'Error al guardar datos de carguío.',
-      error: error.message
+    return res.status(500).json({ 
+      error: error.message 
     });
   }
 };
-
 
 // 🔵 GET: Traer todas las operaciones con sus relaciones
 exports.getAllCarguioData = async (req, res) => {
   try {
     const operaciones = await Operacion_Carguio.findAll({
       include: [
-        { model: Estado_Carguio, as: 'Estado_Carguio' },
-        { model: Horometros_Carguio, as: 'Horometros_Carguio' },
-        { model: Carguio_Carguio, as: 'Carguio_Carguio' }
+        { model: Estado_Carguio },       // Sequelize usará alias automático: Estado_Carguios
+        { model: Horometros_Carguio },   // Alias: Horometros_Carguios
+        { model: Carguio_Carguio }       // Alias: Carguio_Carguios
       ]
     });
 
