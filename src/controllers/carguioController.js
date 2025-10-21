@@ -100,6 +100,117 @@ exports.createCarguioData = async (req, res) => {
   }
 };
 
+exports.actualizarCarguioData = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    let dataList = Array.isArray(req.body) ? req.body : [req.body];
+    const resultados = [];
+
+    for (const data of dataList) {
+      const { operacion, estados, horometros, carguios } = data;
+      const operacionId = operacion?.id;
+
+      const resultadoOperacion = {
+        id: operacionId,
+        success: true,
+        message: 'Operación actualizada correctamente'
+      };
+
+      try {
+        // 🟩 1. Verificar que exista la operación
+        const operacionExistente = await Operacion_Carguio.findByPk(operacionId, { transaction });
+        if (!operacionExistente) {
+          throw new Error(`Operación con ID ${operacionId} no encontrada`);
+        }
+
+        // 🟨 2. Actualizar operación principal
+        await Operacion_Carguio.update({
+          turno: operacion.turno,
+          equipo: operacion.equipo,
+          codigo: operacion.codigo,
+          empresa: operacion.empresa,
+          fecha: operacion.fecha,
+          tipo_operacion: operacion.tipo_operacion,
+          estado: operacion.estado
+        }, {
+          where: { id: operacionId },
+          transaction
+        });
+
+        // 🟦 3. Eliminar registros antiguos y recrear
+        // Estados
+        await Estado_Carguio.destroy({ where: { operacion_id: operacionId }, transaction });
+        if (Array.isArray(estados) && estados.length > 0) {
+          await Estado_Carguio.bulkCreate(
+            estados.map(e => ({
+              ...e,
+              operacion_id: operacionId
+            })),
+            { transaction }
+          );
+        }
+
+        // Horómetros
+        await Horometros_Carguio.destroy({ where: { operacion_id: operacionId }, transaction });
+        if (Array.isArray(horometros) && horometros.length > 0) {
+          await Horometros_Carguio.bulkCreate(
+            horometros.map(h => ({
+              ...h,
+              operacion_id: operacionId
+            })),
+            { transaction }
+          );
+        }
+
+        // Carguíos
+        await Carguio_Carguio.destroy({ where: { operacion_id: operacionId }, transaction });
+        if (Array.isArray(carguios) && carguios.length > 0) {
+          await Carguio_Carguio.bulkCreate(
+            carguios.map(c => ({
+              ...c,
+              operacion_id: operacionId
+            })),
+            { transaction }
+          );
+        }
+
+        resultados.push(resultadoOperacion);
+      } catch (error) {
+        resultadoOperacion.success = false;
+        resultadoOperacion.message = `Error al actualizar operación ${operacionId}: ${error.message}`;
+        resultados.push(resultadoOperacion);
+      }
+    }
+
+    // Verificar si hubo errores
+    const errores = resultados.filter(r => !r.success);
+    if (errores.length > 0) {
+      await transaction.rollback();
+      return res.status(207).json({
+        message: 'Algunas operaciones no se actualizaron correctamente',
+        resultados,
+        errores: errores.map(e => e.message)
+      });
+    }
+
+    await transaction.commit();
+    return res.status(200).json({
+      message: 'Todas las operaciones actualizadas correctamente',
+      resultados
+    });
+
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error general al actualizar Carguío:', error);
+    return res.status(500).json({
+      message: 'Error general en la transacción',
+      error: error.message
+    });
+  }
+};
+
+
 
 // 🔵 GET: Traer todas las operaciones con sus relaciones
 exports.getAllCarguioData = async (req, res) => {

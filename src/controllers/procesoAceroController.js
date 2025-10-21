@@ -26,10 +26,26 @@ exports.getById = async (req, res) => {
 // Crear un nuevo registro
 exports.create = async (req, res) => {
   try {
-    const { proceso, tipo_acero, descripcion, precio } = req.body;
-    const nuevo = await ProcesoAcero.create({ proceso, tipo_acero, descripcion, precio });
+    const { codigo, proceso, tipo_acero, descripcion, precio } = req.body;
+    
+    // Validar que el código no esté duplicado
+    const existeCodigo = await ProcesoAcero.findOne({ where: { codigo } });
+    if (existeCodigo) {
+      return res.status(400).json({ error: 'El código ya existe' });
+    }
+
+    const nuevo = await ProcesoAcero.create({ 
+      codigo, 
+      proceso, 
+      tipo_acero, 
+      descripcion, 
+      precio 
+    });
     res.status(201).json(nuevo);
   } catch (error) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(400).json({ error: 'El código ya existe' });
+    }
     res.status(500).json({ error: 'Error al crear el proceso' });
   }
 };
@@ -37,16 +53,35 @@ exports.create = async (req, res) => {
 // Actualizar un registro por ID
 exports.update = async (req, res) => {
   try {
-    const { proceso, tipo_acero, descripcion, precio } = req.body;
+    const { codigo, proceso, tipo_acero, descripcion, precio } = req.body;
     const procesoAcero = await ProcesoAcero.findByPk(req.params.id);
 
     if (!procesoAcero) {
       return res.status(404).json({ error: 'Proceso no encontrado' });
     }
 
-    await procesoAcero.update({ proceso, tipo_acero, descripcion, precio });
+    // Validar que el código no esté duplicado (si se está cambiando)
+    if (codigo && codigo !== procesoAcero.codigo) {
+      const existeCodigo = await ProcesoAcero.findOne({ 
+        where: { codigo } 
+      });
+      if (existeCodigo) {
+        return res.status(400).json({ error: 'El código ya existe' });
+      }
+    }
+
+    await procesoAcero.update({ 
+      codigo, 
+      proceso, 
+      tipo_acero, 
+      descripcion, 
+      precio 
+    });
     res.json(procesoAcero);
   } catch (error) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(400).json({ error: 'El código ya existe' });
+    }
     res.status(500).json({ error: 'Error al actualizar el proceso' });
   }
 };

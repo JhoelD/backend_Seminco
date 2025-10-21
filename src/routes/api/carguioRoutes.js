@@ -8,4 +8,7 @@ router.post('/', carguioController.createCarguioData);
 // GET: obtener todo
 router.get('/', carguioController.getAllCarguioData);
 
+router.put('/', carguioController.actualizarCarguioData);
+
+
 module.exports = router;

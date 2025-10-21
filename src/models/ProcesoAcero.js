@@ -7,6 +7,12 @@ const ProcesoAcero = sequelize.define('ProcesoAcero', {
         primaryKey: true,
         autoIncrement: true
     },
+    codigo: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+        comment: 'Código único del proceso de acero'
+    },
     proceso: {
         type: DataTypes.STRING,
         allowNull: false
