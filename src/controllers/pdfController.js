@@ -23,13 +23,21 @@ exports.createPdf = [
   verificarToken,
   uploadPdf.single('archivo'),
   async (req, res) => {
+    // console.log('===== 📩 NUEVA SOLICITUD PARA SUBIR PDF =====');
+    // console.log('Headers:', req.headers);
+    // console.log('Body recibido:', req.body);
+    // console.log('Archivo recibido:', req.file);
+
     if (!req.file) {
+      // console.error('❌ No se subió ningún archivo');
       return res.status(400).json({ error: 'Debe subir un archivo PDF' });
     }
 
     const pdfUrl = req.file.secure_url || req.file.path || req.file.url;
+    // console.log('URL del PDF generado:', pdfUrl);
 
     if (!pdfUrl) {
+      // console.error('❌ No se pudo obtener la URL del archivo subido');
       return res.status(500).json({ error: 'No se pudo obtener la URL del archivo subido' });
     }
 
@@ -43,16 +51,19 @@ exports.createPdf = [
         url_pdf: pdfUrl
       });
 
+      // console.log('✅ PDF guardado en la base de datos:', nuevoPdf);
+
       res.status(201).json({ 
         message: 'PDF subido correctamente', 
         pdf: nuevoPdf 
       });
     } catch (error) {
-      console.error(error);
+      // console.error('💥 Error al guardar el PDF en la base de datos:', error);
       res.status(500).json({ error: 'Error al guardar el PDF' });
     }
   }
 ];
+
 
 // PUT - Actualizar un PDF
 exports.updatePdf = [
