@@ -29,6 +29,11 @@ const ProcesoAcero = sequelize.define('ProcesoAcero', {
         type: DataTypes.FLOAT,
         allowNull: false,
         comment: 'Precio en $'
+    },
+    rendimiento: {
+        type: DataTypes.DECIMAL(10, 4),
+        allowNull: true,
+        comment: 'Rendimiento del proceso de acero (puede tener decimales)'
     }
 }, {
     tableName: 'procesos_acero',

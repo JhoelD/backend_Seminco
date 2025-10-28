@@ -26,21 +26,24 @@ exports.getById = async (req, res) => {
 // Crear un nuevo registro
 exports.create = async (req, res) => {
   try {
-    const { codigo, proceso, tipo_acero, descripcion, precio } = req.body;
-    
+    const { codigo, proceso, tipo_acero, descripcion, precio, rendimiento } = req.body;
+
     // Validar que el código no esté duplicado
     const existeCodigo = await ProcesoAcero.findOne({ where: { codigo } });
     if (existeCodigo) {
       return res.status(400).json({ error: 'El código ya existe' });
     }
 
+    // Crear nuevo registro
     const nuevo = await ProcesoAcero.create({ 
       codigo, 
       proceso, 
       tipo_acero, 
       descripcion, 
-      precio 
+      precio, 
+      rendimiento
     });
+
     res.status(201).json(nuevo);
   } catch (error) {
     if (error.name === 'SequelizeUniqueConstraintError') {
@@ -53,7 +56,7 @@ exports.create = async (req, res) => {
 // Actualizar un registro por ID
 exports.update = async (req, res) => {
   try {
-    const { codigo, proceso, tipo_acero, descripcion, precio } = req.body;
+    const { codigo, proceso, tipo_acero, descripcion, precio, rendimiento } = req.body;
     const procesoAcero = await ProcesoAcero.findByPk(req.params.id);
 
     if (!procesoAcero) {
@@ -62,21 +65,22 @@ exports.update = async (req, res) => {
 
     // Validar que el código no esté duplicado (si se está cambiando)
     if (codigo && codigo !== procesoAcero.codigo) {
-      const existeCodigo = await ProcesoAcero.findOne({ 
-        where: { codigo } 
-      });
+      const existeCodigo = await ProcesoAcero.findOne({ where: { codigo } });
       if (existeCodigo) {
         return res.status(400).json({ error: 'El código ya existe' });
       }
     }
 
+    // Actualizar registro
     await procesoAcero.update({ 
       codigo, 
       proceso, 
       tipo_acero, 
       descripcion, 
-      precio 
+      precio, 
+      rendimiento
     });
+
     res.json(procesoAcero);
   } catch (error) {
     if (error.name === 'SequelizeUniqueConstraintError') {
