@@ -333,11 +333,53 @@ async function actualizarMedicionExploracion(req, res) {
             details: error.message
         });
     }
+}async function marcarComoUsadosEnMedicionesProgramado(req, res) {
+  const t = await sequelize.transaction();
+
+  try {
+    let { ids, valor } = req.body;
+
+    // Asegurar que 'ids' sea un array
+    if (!Array.isArray(ids)) {
+      ids = [ids];
+    }
+
+    if (ids.length === 0) {
+      return res.status(400).json({ message: 'No se recibieron IDs para actualizar.' });
+    }
+
+    // Si no se envía un valor, se pone 1 por defecto
+    const nuevoValor = typeof valor === 'number' ? valor : 1;
+
+    // Actualizar registros
+    const resultados = await NubeDatosTrabajoExploraciones.update(
+      { medicion_programado: nuevoValor },
+      { where: { id: ids }, transaction: t }
+    );
+
+    await t.commit();
+
+    res.status(200).json({
+      message: `Campo "medicion_programado" actualizado correctamente`,
+      cantidad_actualizada: resultados[0], // número de filas afectadas
+      valor_asignado: nuevoValor
+    });
+
+  } catch (error) {
+    await t.rollback();
+    console.error('Error en marcarComoUsadosEnMedicionesProgramado:', error);
+    res.status(500).json({
+      message: 'Error al actualizar los registros para medicion_programado',
+      error: error.message
+    });
+  }
 }
+
 
 module.exports = { 
     crearExploracionCompleta, 
     obtenerExploracionesCompletas,
     actualizarMedicionExploracion,
-    marcarComoUsadosEnMediciones
+    marcarComoUsadosEnMediciones,
+    marcarComoUsadosEnMedicionesProgramado
 };

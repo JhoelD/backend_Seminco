@@ -13,4 +13,7 @@ router.put('/:id/medicion', tranajoExploController.actualizarMedicionExploracion
 
 router.put('/Explo-medicion', tranajoExploController.marcarComoUsadosEnMediciones);
 
+router.put('/Explo-medicion-programados', tranajoExploController.    marcarComoUsadosEnMedicionesProgramado
+);
+
 module.exports = router; 
