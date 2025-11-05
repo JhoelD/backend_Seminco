@@ -7,6 +7,8 @@ router.post('/', tranajoExploController.crearExploracionCompleta);
 
 router.get('/', verificarToken, tranajoExploController.obtenerExploracionesCompletas);
 
+router.get('/filtrar/tipo', tranajoExploController.obtenerExploracionesPorTipo);
+
 router.get('/:id', verificarToken, tranajoExploController.obtenerExploracionesCompletas);
 
 router.put('/:id/medicion', tranajoExploController.actualizarMedicionExploracion);

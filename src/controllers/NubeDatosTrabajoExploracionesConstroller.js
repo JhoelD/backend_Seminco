@@ -275,6 +275,76 @@ async function obtenerExploracionesCompletas(req, res) {
     }
 }
 
+async function obtenerExploracionesPorTipo(req, res) {
+    try {
+        const { limit = 100, tipo_perforacion } = req.query;
+
+        if (!tipo_perforacion) {
+            return res.status(400).json({
+                error: 'Debe especificar el tipo_perforacion en la consulta'
+            });
+        }
+
+        // 1️⃣ Obtener total filtrado
+        const total = await NubeDatosTrabajoExploraciones.count({
+            where: { tipo_perforacion }
+        });
+        const totalPages = Math.ceil(total / limit);
+
+        let allData = [];
+
+        // 2️⃣ Bucle con paginación y delay
+        for (let page = 1; page <= totalPages; page++) {
+            const offset = (page - 1) * limit;
+
+            const rows = await NubeDatosTrabajoExploraciones.findAll({
+                where: { tipo_perforacion },
+                include: [
+                    {
+                        model: NubeDespacho,
+                        as: 'despachos',
+                        include: [
+                            { model: NubeDespachoDetalle, as: 'detalles' },
+                            { model: NubeDetalleDespachoExplosivos, as: 'detalles_explosivos' }
+                        ]
+                    },
+                    {
+                        model: NubeDevoluciones,
+                        as: 'devoluciones',
+                        include: [
+                            { model: NubeDevolucionDetalle, as: 'detalles' },
+                            { model: NubeDetalleDevolucionesExplosivos, as: 'detalles_explosivos' }
+                        ]
+                    }
+                ],
+                order: [
+                    ['createdAt', 'DESC'],
+                    [{ model: NubeDespacho, as: 'despachos' }, 'createdAt', 'ASC'],
+                    [{ model: NubeDevoluciones, as: 'devoluciones' }, 'createdAt', 'ASC']
+                ],
+                limit: parseInt(limit),
+                offset
+            });
+
+            allData = allData.concat(rows);
+            await delay(200);
+        }
+
+        res.status(200).json({
+            total,
+            totalPages,
+            tipo_perforacion,
+            data: allData
+        });
+
+    } catch (error) {
+        console.error('Error al obtener exploraciones por tipo_perforacion:', error);
+        res.status(500).json({ 
+            error: 'Error al obtener exploraciones por tipo_perforacion',
+            details: error.message 
+        });
+    }
+}
 
 
 async function actualizarMedicionExploracion(req, res) {
@@ -381,5 +451,6 @@ module.exports = {
     obtenerExploracionesCompletas,
     actualizarMedicionExploracion,
     marcarComoUsadosEnMediciones,
-    marcarComoUsadosEnMedicionesProgramado
+    marcarComoUsadosEnMedicionesProgramado,
+    obtenerExploracionesPorTipo
 };
