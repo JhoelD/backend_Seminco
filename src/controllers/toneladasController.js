@@ -29,8 +29,16 @@ const getToneladaById = async (req, res) => {
 // Crear una tonelada
 const createTonelada = async (req, res) => {
   try {
-    const { fecha, turno, zona, tipo, labor, toneladas } = req.body;
+    const data = req.body;
 
+    // Si el frontend envía un array de objetos
+    if (Array.isArray(data)) {
+      const nuevasToneladas = await Toneladas.bulkCreate(data);
+      return res.status(201).json(nuevasToneladas);
+    }
+
+    // Si el frontend envía un solo objeto
+    const { fecha, turno, zona, tipo, labor, toneladas } = data;
     const nuevaTonelada = await Toneladas.create({
       fecha,
       turno,
@@ -43,9 +51,13 @@ const createTonelada = async (req, res) => {
     res.status(201).json(nuevaTonelada);
   } catch (error) {
     console.error("Error en createTonelada:", error);
-    res.status(500).json({ message: 'Error al crear la tonelada', error: error.message });
+    res.status(500).json({
+      message: 'Error al crear la tonelada',
+      error: error.message
+    });
   }
 };
+
 
 // Actualizar una tonelada
 const updateTonelada = async (req, res) => {
