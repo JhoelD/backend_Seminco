@@ -31,13 +31,14 @@ const createTonelada = async (req, res) => {
   try {
     const data = req.body;
 
-    // Si el frontend envía un array de objetos
+    // Si se envía una lista (JSON array)
     if (Array.isArray(data)) {
-      const nuevasToneladas = await Toneladas.bulkCreate(data);
+      // Usamos bulkCreate para insertar todos los registros de una sola vez
+      const nuevasToneladas = await Toneladas.bulkCreate(data, { validate: true });
       return res.status(201).json(nuevasToneladas);
     }
 
-    // Si el frontend envía un solo objeto
+    // Si se envía un solo registro (objeto)
     const { fecha, turno, zona, tipo, labor, toneladas } = data;
     const nuevaTonelada = await Toneladas.create({
       fecha,
@@ -51,10 +52,7 @@ const createTonelada = async (req, res) => {
     res.status(201).json(nuevaTonelada);
   } catch (error) {
     console.error("Error en createTonelada:", error);
-    res.status(500).json({
-      message: 'Error al crear la tonelada',
-      error: error.message
-    });
+    res.status(500).json({ message: 'Error al crear la tonelada', error: error.message });
   }
 };
 
