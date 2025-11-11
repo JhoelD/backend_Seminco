@@ -9,6 +9,8 @@ router.get('/', verificarToken, tranajoExploController.obtenerExploracionesCompl
 
 router.get('/filtrar/tipo', tranajoExploController.obtenerExploracionesPorTipo);
 
+router.get('/filtrar/labor', tranajoExploController.obtenerPorLaborCompleta);
+
 router.get('/:id', verificarToken, tranajoExploController.obtenerExploracionesCompletas);
 
 router.put('/:id/medicion', tranajoExploController.actualizarMedicionExploracion);

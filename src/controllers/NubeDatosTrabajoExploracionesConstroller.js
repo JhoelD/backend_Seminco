@@ -9,6 +9,7 @@ const {
 } = require('../models/NubeDatosTrabajoExploraciones '); // Asegúrate que todos los modelos se exporten desde el archivo models
 
 const sequelize = require('../config/sequelize');
+const { Op } = require('sequelize');
 
 async function crearExploracionCompleta(req, res) {
     const t = await sequelize.transaction();
@@ -346,6 +347,113 @@ async function obtenerExploracionesPorTipo(req, res) {
     }
 }
 
+async function obtenerPorLaborCompleta(req, res) {
+  try {
+    const { tipo_labor, labor, ala, mes, anio, limit = 100 } = req.query;
+
+    if (!tipo_labor || !labor) {
+      return res.status(400).json({
+        error: 'Los parámetros tipo_labor y labor son obligatorios.'
+      });
+    }
+
+    const where = { tipo_labor, labor };
+    if (ala) where.ala = ala;
+
+    // Mapeo de meses a número
+    const mesesMap = {
+      ENERO: 1, FEBRERO: 2, MARZO: 3, ABRIL: 4, MAYO: 5, JUNIO: 6,
+      JULIO: 7, AGOSTO: 8, SEPTIEMBRE: 9, SETIEMBRE: 9, OCTUBRE: 10, NOVIEMBRE: 11, DICIEMBRE: 12
+    };
+
+    if (anio) {
+      where.fecha = sequelize.where(sequelize.fn('YEAR', sequelize.col('fecha')), anio);
+    }
+
+    if (mes) {
+      const mesNum = mesesMap[mes.toUpperCase()];
+      if (mesNum) {
+        if (anio) {
+          where[Op.and] = [
+            sequelize.where(sequelize.fn('YEAR', sequelize.col('fecha')), anio),
+            sequelize.where(sequelize.fn('MONTH', sequelize.col('fecha')), mesNum)
+          ];
+        } else {
+          where.fecha = sequelize.where(sequelize.fn('MONTH', sequelize.col('fecha')), mesNum);
+        }
+      }
+    }
+
+    const total = await NubeDatosTrabajoExploraciones.count({ where });
+    const totalPages = Math.ceil(total / limit);
+    let allData = [];
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+    for (let page = 1; page <= totalPages; page++) {
+      const offset = (page - 1) * limit;
+
+      const rows = await NubeDatosTrabajoExploraciones.findAll({
+        where,
+        attributes: [
+          'id',
+          'fecha',
+          'turno',
+          'empresa',
+          'zona',
+          'tipo_labor',
+          'labor',
+          'ala',
+          'veta',
+          'tipo_perforacion',
+          'envio',
+          'semanaSelect'
+        ],
+        include: [
+          {
+            model: NubeDespacho,
+            as: 'despachos',
+            attributes: ['id'],
+            include: [
+              {
+                model: NubeDespachoDetalle,
+                as: 'detalles',
+                attributes: ['nombre_material', 'cantidad']
+              }
+            ]
+          },
+          {
+            model: NubeDevoluciones,
+            as: 'devoluciones',
+            attributes: ['id'],
+            include: [
+              {
+                model: NubeDevolucionDetalle,
+                as: 'detalles',
+                attributes: ['nombre_material', 'cantidad']
+              }
+            ]
+          }
+        ],
+        order: [['fecha', 'DESC']],
+        limit: parseInt(limit),
+        offset
+      });
+
+      allData = allData.concat(rows);
+      await delay(100);
+    }
+
+    res.status(200).json(allData);
+
+  } catch (error) {
+    console.error('❌ Error al obtener exploraciones por labor:', error);
+    res.status(500).json({
+      error: 'Error al obtener exploraciones por tipo_labor, labor y ala',
+      details: error.message
+    });
+  }
+}
+
 
 async function actualizarMedicionExploracion(req, res) {
     const t = await sequelize.transaction();
@@ -452,5 +560,6 @@ module.exports = {
     actualizarMedicionExploracion,
     marcarComoUsadosEnMediciones,
     marcarComoUsadosEnMedicionesProgramado,
-    obtenerExploracionesPorTipo
+    obtenerExploracionesPorTipo,
+    obtenerPorLaborCompleta
 };

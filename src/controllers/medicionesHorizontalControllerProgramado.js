@@ -1,4 +1,6 @@
 const MedicionesHorizontal = require('../models/MedicionesHorizontalProgramado');
+const sequelize = require('../config/sequelize'); // o la ruta correcta a tu config
+const { Op } = require('sequelize');
 
 // Obtener todas las mediciones horizontales
 const getAllMedicionesHorizontal = async (req, res) => {
@@ -158,6 +160,62 @@ const deleteMedicionHorizontal = async (req, res) => {
   }
 };
 
+const getMedicionesPorLabor = async (req, res) => {
+  try {
+    const { labor } = req.params;
+    const { mes, anio } = req.query;
+
+    if (!labor) {
+      return res.status(400).json({ message: 'Debe proporcionar una labor' });
+    }
+
+    const mesesMap = {
+      ENERO: 1, FEBRERO: 2, MARZO: 3, ABRIL: 4, MAYO: 5, JUNIO: 6,
+      JULIO: 7, AGOSTO: 8, SEPTIEMBRE: 9, SETIEMBRE: 9, OCTUBRE: 10, NOVIEMBRE: 11, DICIEMBRE: 12
+    };
+
+    let whereClause = { labor };
+
+    if (anio) {
+      whereClause = { ...whereClause, fecha: sequelize.where(sequelize.fn('YEAR', sequelize.col('fecha')), anio) };
+    }
+
+    if (mes) {
+      const mesNum = mesesMap[mes.toUpperCase()];
+      if (mesNum) {
+        if (anio) {
+          // combinamos año y mes
+          whereClause = {
+            ...whereClause,
+            [Op.and]: [
+              sequelize.where(sequelize.fn('YEAR', sequelize.col('fecha')), anio),
+              sequelize.where(sequelize.fn('MONTH', sequelize.col('fecha')), mesNum)
+            ]
+          };
+        } else {
+          whereClause = {
+            ...whereClause,
+            fecha: sequelize.where(sequelize.fn('MONTH', sequelize.col('fecha')), mesNum)
+          };
+        }
+      }
+    }
+
+    const mediciones = await MedicionesHorizontal.findAll({ where: whereClause });
+
+    if (!mediciones.length) {
+      return res.status(404).json({ message: `No se encontraron mediciones para la labor "${labor}"` });
+    }
+
+    res.status(200).json(mediciones);
+  } catch (error) {
+    console.error("Error en getMedicionesPorLabor:", error);
+    res.status(500).json({ message: 'Error al obtener las mediciones por labor', error: error.message });
+  }
+};
+
+
+
 module.exports = {
   getAllMedicionesHorizontal,
   getMedicionHorizontalById,
@@ -165,5 +223,6 @@ module.exports = {
   updateMedicionHorizontal,
   deleteMedicionHorizontal,
   getMedicionesConRemanente,
-  bulkUpdateMediciones
+  bulkUpdateMediciones,
+  getMedicionesPorLabor
 };

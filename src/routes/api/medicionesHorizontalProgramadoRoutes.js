@@ -15,4 +15,6 @@ router.put('/update', medicionesHorizontalController.bulkUpdateMediciones);
 
 router.delete('/:id', verificarToken, medicionesHorizontalController.deleteMedicionHorizontal);
 
+router.get('/labor/:labor', medicionesHorizontalController.getMedicionesPorLabor);
+
 module.exports = router;
