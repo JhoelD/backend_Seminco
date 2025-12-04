@@ -9,6 +9,8 @@ router.get('/', verificarToken, tranajoExploController.obtenerExploracionesCompl
 
 router.get('/filtrar/tipo', tranajoExploController.obtenerExploracionesPorTipo);
 
+router.get('/filtrar/fecha', tranajoExploController.obtenerPorFechaCompleta);
+
 router.get('/filtrar/labor', tranajoExploController.obtenerPorLaborCompleta);
 
 router.get('/:id', verificarToken, tranajoExploController.obtenerExploracionesCompletas);

@@ -215,6 +215,78 @@ const getMedicionesPorLabor = async (req, res) => {
 };
 
 
+const getMedicionesPorFecha = async (req, res) => {
+  try {
+    const { mes, anio } = req.query;
+
+    const mesesMap = {
+      ENERO: 1, FEBRERO: 2, MARZO: 3, ABRIL: 4, MAYO: 5, JUNIO: 6,
+      JULIO: 7, AGOSTO: 8, SEPTIEMBRE: 9, SETIEMBRE: 9, OCTUBRE: 10, NOVIEMBRE: 11, DICIEMBRE: 12
+    };
+
+    // Empezamos sin labor
+    let whereClause = {};
+
+    if (anio) {
+      whereClause = {
+        ...whereClause,
+        fecha: sequelize.where(
+          sequelize.fn('YEAR', sequelize.col('fecha')),
+          anio
+        )
+      };
+    }
+
+    if (mes) {
+      const mesNum = mesesMap[mes.toUpperCase()];
+      if (mesNum) {
+        if (anio) {
+          // Si hay año y mes, combinamos ambos
+          whereClause = {
+            ...whereClause,
+            [Op.and]: [
+              sequelize.where(
+                sequelize.fn('YEAR', sequelize.col('fecha')),
+                anio
+              ),
+              sequelize.where(
+                sequelize.fn('MONTH', sequelize.col('fecha')),
+                mesNum
+              )
+            ]
+          };
+        } else {
+          // Solo mes
+          whereClause = {
+            ...whereClause,
+            fecha: sequelize.where(
+              sequelize.fn('MONTH', sequelize.col('fecha')),
+              mesNum
+            )
+          };
+        }
+      }
+    }
+
+    const mediciones = await MedicionesHorizontal.findAll({ where: whereClause });
+
+    if (!mediciones.length) {
+      return res.status(404).json({
+        message: `No se encontraron mediciones para los filtros proporcionados`
+      });
+    }
+
+    res.status(200).json(mediciones);
+  } catch (error) {
+    console.error("Error en getMedicionesPorFecha:", error);
+    res.status(500).json({
+      message: 'Error al obtener las mediciones por fecha',
+      error: error.message
+    });
+  }
+};
+
+
 
 module.exports = {
   getAllMedicionesHorizontal,
@@ -224,5 +296,6 @@ module.exports = {
   deleteMedicionHorizontal,
   getMedicionesConRemanente,
   bulkUpdateMediciones,
-  getMedicionesPorLabor
+  getMedicionesPorLabor,
+  getMedicionesPorFecha
 };

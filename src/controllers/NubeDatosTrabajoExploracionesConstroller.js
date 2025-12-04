@@ -214,57 +214,112 @@ function delay(ms) {
 
 async function obtenerExploracionesCompletas(req, res) {
     try {
-        const { limit = 100 } = req.query;
+        let { 
+            limit = 100, 
+            fecha_inicio, 
+            fecha_fin,
+            turno,
+            page = 1
+        } = req.query;
 
-        // 1️⃣ Obtener total para calcular páginas
-        const total = await NubeDatosTrabajoExploraciones.count();
-        const totalPages = Math.ceil(total / limit);
+        // Normalizar parámetros
+        page = parseInt(page) || 1;
+        limit = parseInt(limit) || 100;
+        const MAX_LIMIT = 200;
+        if (limit > MAX_LIMIT) limit = MAX_LIMIT;
 
-        let allData = [];
-
-        // 2️⃣ Bucle con delay
-        for (let page = 1; page <= totalPages; page++) {
-            const offset = (page - 1) * limit;
-
-            const rows = await NubeDatosTrabajoExploraciones.findAll({
-                include: [
-                    {
-                        model: NubeDespacho,
-                        as: 'despachos',
-                        include: [
-                            { model: NubeDespachoDetalle, as: 'detalles' },
-                            { model: NubeDetalleDespachoExplosivos, as: 'detalles_explosivos' }
-                        ]
-                    },
-                    {
-                        model: NubeDevoluciones,
-                        as: 'devoluciones',
-                        include: [
-                            { model: NubeDevolucionDetalle, as: 'detalles' },
-                            { model: NubeDetalleDevolucionesExplosivos, as: 'detalles_explosivos' }
-                        ]
-                    }
-                ],
-                order: [
-                    ['createdAt', 'DESC'],
-                    [{ model: NubeDespacho, as: 'despachos' }, 'createdAt', 'ASC'],
-                    [{ model: NubeDevoluciones, as: 'devoluciones' }, 'createdAt', 'ASC']
-                ],
-                limit: parseInt(limit),
-                offset
-            });
-
-            allData = allData.concat(rows);
-
-            // ⏳ Esperar 200ms entre cada query
-            await delay(200);
+        // Construir condiciones WHERE
+        const whereConditions = {};
+        
+        if (fecha_inicio && fecha_fin) {
+            whereConditions.fecha = { [Op.between]: [fecha_inicio, fecha_fin] };
+        } else if (fecha_inicio) {
+            whereConditions.fecha = { [Op.gte]: fecha_inicio };
+        } else if (fecha_fin) {
+            whereConditions.fecha = { [Op.lte]: fecha_fin };
         }
 
-        // 3️⃣ Devolver todo junto
+        if (turno && turno !== '') {
+            whereConditions.turno = turno;
+        }
+
+        const offset = (page - 1) * limit;
+
+        // 1️⃣ COUNT SIN JOINS (ya lo tienes bien)
+        const total = await NubeDatosTrabajoExploraciones.count({
+            where: whereConditions
+        });
+
+        // 2️⃣ OBTENER SOLO LOS IDs PRINCIPALES CON PAGINACIÓN
+        const registrosIds = await NubeDatosTrabajoExploraciones.findAll({
+            where: whereConditions,
+            attributes: ['id'],
+            order: [['fecha', 'DESC'], ['createdAt', 'DESC']],
+            limit,
+            offset
+        });
+
+        const ids = registrosIds.map(reg => reg.id);
+
+        if (ids.length === 0) {
+            return res.status(200).json({
+                total: 0,
+                totalPages: 0,
+                currentPage: page,
+                data: []
+            });
+        }
+
+        // 3️⃣ OBTENER DATOS COMPLETOS SOLO PARA LOS IDs PAGINADOS
+        const rows = await NubeDatosTrabajoExploraciones.findAll({
+            where: { id: { [Op.in]: ids } },
+            include: [
+                {
+                    model: NubeDespacho,
+                    as: 'despachos',
+                    include: [
+                        { 
+                            model: NubeDespachoDetalle, 
+                            as: 'detalles',
+                            separate: true // ⬅️ EVITA PRODUCTO CARTESIANO
+                        },
+                        { 
+                            model: NubeDetalleDespachoExplosivos, 
+                            as: 'detalles_explosivos',
+                            separate: true // ⬅️ EVITA PRODUCTO CARTESIANO
+                        }
+                    ]
+                },
+                {
+                    model: NubeDevoluciones,
+                    as: 'devoluciones',
+                    include: [
+                        { 
+                            model: NubeDevolucionDetalle, 
+                            as: 'detalles',
+                            separate: true 
+                        },
+                        { 
+                            model: NubeDetalleDevolucionesExplosivos, 
+                            as: 'detalles_explosivos',
+                            separate: true 
+                        }
+                    ]
+                }
+            ],
+            order: [['fecha', 'DESC'], ['createdAt', 'DESC']]
+        });
+
         res.status(200).json({
             total,
-            totalPages,
-            data: allData
+            totalPages: Math.ceil(total / limit),
+            currentPage: page,
+            filteredByDate: !!(fecha_inicio || fecha_fin),
+            filteredByTurno: !!(turno && turno !== ''),
+            fecha_inicio: fecha_inicio || null,
+            fecha_fin: fecha_fin || null,
+            turno: turno || null,
+            data: rows
         });
 
     } catch (error) {
@@ -276,76 +331,111 @@ async function obtenerExploracionesCompletas(req, res) {
     }
 }
 
+
 async function obtenerExploracionesPorTipo(req, res) {
-    try {
-        const { limit = 100, tipo_perforacion } = req.query;
+  try {
+    const { limit = 100, tipo_perforacion } = req.query;
 
-        if (!tipo_perforacion) {
-            return res.status(400).json({
-                error: 'Debe especificar el tipo_perforacion en la consulta'
-            });
-        }
-
-        // 1️⃣ Obtener total filtrado
-        const total = await NubeDatosTrabajoExploraciones.count({
-            where: { tipo_perforacion }
-        });
-        const totalPages = Math.ceil(total / limit);
-
-        let allData = [];
-
-        // 2️⃣ Bucle con paginación y delay
-        for (let page = 1; page <= totalPages; page++) {
-            const offset = (page - 1) * limit;
-
-            const rows = await NubeDatosTrabajoExploraciones.findAll({
-                where: { tipo_perforacion },
-                include: [
-                    {
-                        model: NubeDespacho,
-                        as: 'despachos',
-                        include: [
-                            { model: NubeDespachoDetalle, as: 'detalles' },
-                            { model: NubeDetalleDespachoExplosivos, as: 'detalles_explosivos' }
-                        ]
-                    },
-                    {
-                        model: NubeDevoluciones,
-                        as: 'devoluciones',
-                        include: [
-                            { model: NubeDevolucionDetalle, as: 'detalles' },
-                            { model: NubeDetalleDevolucionesExplosivos, as: 'detalles_explosivos' }
-                        ]
-                    }
-                ],
-                order: [
-                    ['createdAt', 'DESC'],
-                    [{ model: NubeDespacho, as: 'despachos' }, 'createdAt', 'ASC'],
-                    [{ model: NubeDevoluciones, as: 'devoluciones' }, 'createdAt', 'ASC']
-                ],
-                limit: parseInt(limit),
-                offset
-            });
-
-            allData = allData.concat(rows);
-            await delay(200);
-        }
-
-        res.status(200).json({
-            total,
-            totalPages,
-            tipo_perforacion,
-            data: allData
-        });
-
-    } catch (error) {
-        console.error('Error al obtener exploraciones por tipo_perforacion:', error);
-        res.status(500).json({ 
-            error: 'Error al obtener exploraciones por tipo_perforacion',
-            details: error.message 
-        });
+    if (!tipo_perforacion) {
+      return res.status(400).json({
+        error: 'Debe especificar el tipo_perforacion en la consulta'
+      });
     }
+
+    // 1️⃣ Obtener total filtrado (solo por tipo_perforacion)
+    const where = { tipo_perforacion };
+
+    const total = await NubeDatosTrabajoExploraciones.count({ where });
+    const totalPages = Math.ceil(total / limit);
+
+    let allData = [];
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+    // 2️⃣ Bucle con paginación y delay
+    for (let page = 1; page <= totalPages; page++) {
+      const offset = (page - 1) * limit;
+
+      const rows = await NubeDatosTrabajoExploraciones.findAll({
+        where,
+        // 🔹 Solo los campos necesarios para procesar en el front
+        attributes: [
+          'id',
+          'fecha',
+          'turno',
+          'empresa',
+          'zona',
+          'tipo_labor',
+          'labor',
+          'ala',
+          'veta',
+          'tipo_perforacion',
+          'envio',
+          'semanaDefault',
+          // Agrega estos solo si realmente existen en tu modelo / tabla:
+          // 'avance_programado',
+          // 'ancho',
+          // 'alto',
+          // 'idnube',
+          // 'no_aplica',
+          // 'remanente'
+        ],
+        include: [
+          {
+            model: NubeDespacho,
+            as: 'despachos',
+            // realmente solo necesitas el id para relacionar, pero incluso eso no lo usas en el front
+            attributes: ['id'],
+            include: [
+              {
+                model: NubeDespachoDetalle,
+                as: 'detalles',
+                attributes: ['nombre_material', 'cantidad']
+              }
+            ]
+          },
+          {
+            model: NubeDevoluciones,
+            as: 'devoluciones',
+            attributes: ['id'],
+            include: [
+              {
+                model: NubeDevolucionDetalle,
+                as: 'detalles',
+                attributes: ['nombre_material', 'cantidad']
+              }
+            ]
+          }
+        ],
+        // Orden simple para no encarecer tanto la consulta
+        order: [
+          ['fecha', 'DESC'],
+          ['id', 'DESC']
+        ],
+        limit: parseInt(limit),
+        offset
+      });
+
+      allData = allData.concat(rows);
+      await delay(100);
+    }
+
+    // Puedes devolver el mismo formato que antes
+    res.status(200).json({
+      total,
+      totalPages,
+      tipo_perforacion,
+      data: allData
+    });
+
+  } catch (error) {
+    console.error('Error al obtener exploraciones por tipo_perforacion:', error);
+    res.status(500).json({
+      error: 'Error al obtener exploraciones por tipo_perforacion',
+      details: error.message
+    });
+  }
 }
+
 
 async function obtenerPorLaborCompleta(req, res) {
   try {
@@ -454,6 +544,122 @@ async function obtenerPorLaborCompleta(req, res) {
   }
 }
 
+async function obtenerPorFechaCompleta(req, res) {
+  try {
+    const { mes, anio, limit = 100 } = req.query;
+
+    // Mapeo de meses a número
+    const mesesMap = {
+      ENERO: 1, FEBRERO: 2, MARZO: 3, ABRIL: 4, MAYO: 5, JUNIO: 6,
+      JULIO: 7, AGOSTO: 8, SEPTIEMBRE: 9, SETIEMBRE: 9, OCTUBRE: 10, NOVIEMBRE: 11, DICIEMBRE: 12
+    };
+
+    // Iniciamos el where vacío
+    const where = {};
+
+    if (anio) {
+      where.fecha = sequelize.where(
+        sequelize.fn('YEAR', sequelize.col('fecha')),
+        anio
+      );
+    }
+
+    if (mes) {
+      const mesNum = mesesMap[mes.toUpperCase()];
+      if (mesNum) {
+        if (anio) {
+          // Año + mes
+          where[Op.and] = [
+            sequelize.where(
+              sequelize.fn('YEAR', sequelize.col('fecha')),
+              anio
+            ),
+            sequelize.where(
+              sequelize.fn('MONTH', sequelize.col('fecha')),
+              mesNum
+            )
+          ];
+        } else {
+          // Solo mes
+          where.fecha = sequelize.where(
+            sequelize.fn('MONTH', sequelize.col('fecha')),
+            mesNum
+          );
+        }
+      }
+    }
+
+    const total = await NubeDatosTrabajoExploraciones.count({ where });
+    const totalPages = Math.ceil(total / limit);
+    let allData = [];
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+    for (let page = 1; page <= totalPages; page++) {
+      const offset = (page - 1) * limit;
+
+      const rows = await NubeDatosTrabajoExploraciones.findAll({
+        where,
+        attributes: [
+          'id',
+          'fecha',
+          'turno',
+          'empresa',
+          'zona',
+          'tipo_labor',
+          'labor',
+          'ala',
+          'veta',
+          'tipo_perforacion',
+          'envio',
+          'semanaSelect'
+        ],
+        include: [
+          {
+            model: NubeDespacho,
+            as: 'despachos',
+            attributes: ['id'],
+            include: [
+              {
+                model: NubeDespachoDetalle,
+                as: 'detalles',
+                attributes: ['nombre_material', 'cantidad']
+              }
+            ]
+          },
+          {
+            model: NubeDevoluciones,
+            as: 'devoluciones',
+            attributes: ['id'],
+            include: [
+              {
+                model: NubeDevolucionDetalle,
+                as: 'detalles',
+                attributes: ['nombre_material', 'cantidad']
+              }
+            ]
+          }
+        ],
+        order: [['fecha', 'DESC']],
+        limit: parseInt(limit),
+        offset
+      });
+
+      allData = allData.concat(rows);
+      await delay(100);
+    }
+
+    res.status(200).json(allData);
+
+  } catch (error) {
+    console.error('❌ Error al obtener exploraciones por fecha:', error);
+    res.status(500).json({
+      error: 'Error al obtener exploraciones por fecha',
+      details: error.message
+    });
+  }
+}
+
+
 
 async function actualizarMedicionExploracion(req, res) {
     const t = await sequelize.transaction();
@@ -561,5 +767,6 @@ module.exports = {
     marcarComoUsadosEnMediciones,
     marcarComoUsadosEnMedicionesProgramado,
     obtenerExploracionesPorTipo,
-    obtenerPorLaborCompleta
+    obtenerPorLaborCompleta,
+    obtenerPorFechaCompleta
 };

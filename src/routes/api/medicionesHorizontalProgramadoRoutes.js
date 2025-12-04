@@ -7,6 +7,8 @@ router.get('/', medicionesHorizontalController.getAllMedicionesHorizontal);
 
 router.get('/remanente',medicionesHorizontalController.getMedicionesConRemanente);
 
+router.get('/por-fecha', medicionesHorizontalController.getMedicionesPorFecha);
+
 router.get('/:id', verificarToken, medicionesHorizontalController.getMedicionHorizontalById);
 
 router.post('/', medicionesHorizontalController.createMedicionHorizontal);

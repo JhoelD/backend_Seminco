@@ -5,6 +5,7 @@ const { NubeOperacion, NubeHorometros, NubeEstado, NubePerforacionTaladroLargo, 
     NubeSostenimiento,
     NubeInterSostenimiento
  } = require('../models/operacionLargo');
+ const { Op } = require('sequelize');
 
  async function crearOperacionLargo(req, res) {
     const t = await sequelize.transaction();
@@ -213,6 +214,97 @@ async function obtenerOperacionesLargo(req, res) {
         res.status(500).json({ error: error.message });
     }
 }
+
+
+async function obtenerOperacionesLargoPlan(req, res) {
+  try {
+    const { mes, anio, limit = 100 } = req.query;
+
+    // Mapeo de meses a número
+    const mesesMap = {
+      ENERO: 1, FEBRERO: 2, MARZO: 3, ABRIL: 4, MAYO: 5, JUNIO: 6,
+      JULIO: 7, AGOSTO: 8, SEPTIEMBRE: 9, SETIEMBRE: 9, OCTUBRE: 10, NOVIEMBRE: 11, DICIEMBRE: 12
+    };
+
+    // where base: solo operaciones de taladro largo
+    const where = {
+      tipo_operacion: 'PERFORACIÓN TALADROS LARGOS'
+    };
+
+    // Filtro por año
+    if (anio) {
+      where.fecha = sequelize.where(
+        sequelize.fn('YEAR', sequelize.col('fecha')),
+        anio
+      );
+    }
+
+    // Filtro por mes (y opcionalmente año)
+    if (mes) {
+      const mesNum = mesesMap[mes.toUpperCase()];
+      if (mesNum) {
+        if (anio) {
+          // Año + mes
+          where[Op.and] = [
+            sequelize.where(
+              sequelize.fn('YEAR', sequelize.col('fecha')),
+              anio
+            ),
+            sequelize.where(
+              sequelize.fn('MONTH', sequelize.col('fecha')),
+              mesNum
+            ),
+            { tipo_operacion: 'PERFORACIÓN TALADROS LARGOS' }
+          ];
+          delete where.fecha; // ya no usamos where.fecha directo
+        } else {
+          // Solo mes
+          where.fecha = sequelize.where(
+            sequelize.fn('MONTH', sequelize.col('fecha')),
+            mesNum
+          );
+        }
+      }
+    }
+
+    // Paginación
+    const total = await NubeOperacion.count({ where });
+    const totalPages = Math.ceil(total / limit);
+    let allData = [];
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+    for (let page = 1; page <= totalPages; page++) {
+      const offset = (page - 1) * limit;
+
+      const operaciones = await NubeOperacion.findAll({
+        where,
+        include: [
+          {
+            model: NubePerforacionTaladroLargo,
+            as: 'perforaciones'
+          }
+        ],
+        order: [['fecha', 'DESC']], // o createdAt si prefieres
+        limit: parseInt(limit),
+        offset
+      });
+
+      allData = allData.concat(operaciones);
+      await delay(100);
+    }
+
+    return res.status(200).json(allData);
+
+  } catch (error) {
+    console.error('❌ Error al obtener operaciones largo:', error);
+    return res.status(500).json({
+      error: 'Error al obtener operaciones de taladros largos',
+      details: error.message
+    });
+  }
+}
+
+
 //HORIZONTAL-----------------------------------------------------------
 async function crearOperacionHorizontal(req, res) {
     const t = await sequelize.transaction();
@@ -421,6 +513,93 @@ async function obtenerOperacionesHorizontal(req, res) {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
+}
+
+async function obtenerOperacionesHorizontalPlan(req, res) {
+  try {
+    const { mes, anio, limit = 100 } = req.query;
+
+    const mesesMap = {
+      ENERO: 1, FEBRERO: 2, MARZO: 3, ABRIL: 4, MAYO: 5, JUNIO: 6,
+      JULIO: 7, AGOSTO: 8, SEPTIEMBRE: 9, SETIEMBRE: 9, OCTUBRE: 10, NOVIEMBRE: 11, DICIEMBRE: 12
+    };
+
+    // where base: solo operaciones de perforación horizontal
+    const where = {
+      tipo_operacion: 'PERFORACIÓN HORIZONTAL'
+    };
+
+    // Filtro por año
+    if (anio) {
+      where.fecha = sequelize.where(
+        sequelize.fn('YEAR', sequelize.col('fecha')),
+        anio
+      );
+    }
+
+    // Filtro por mes
+    if (mes) {
+      const mesNum = mesesMap[mes.toUpperCase()];
+      if (mesNum) {
+        if (anio) {
+          // Año + mes
+          where[Op.and] = [
+            sequelize.where(
+              sequelize.fn('YEAR', sequelize.col('fecha')),
+              anio
+            ),
+            sequelize.where(
+              sequelize.fn('MONTH', sequelize.col('fecha')),
+              mesNum
+            ),
+            { tipo_operacion: 'PERFORACIÓN HORIZONTAL' }
+          ];
+          delete where.fecha; // ya usamos YEAR/MONTH en el AND
+        } else {
+          // Solo mes
+          where.fecha = sequelize.where(
+            sequelize.fn('MONTH', sequelize.col('fecha')),
+            mesNum
+          );
+        }
+      }
+    }
+
+    // Paginación por páginas
+    const total = await NubeOperacion.count({ where });
+    const totalPages = Math.ceil(total / limit);
+    let allData = [];
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+    for (let page = 1; page <= totalPages; page++) {
+      const offset = (page - 1) * limit;
+
+      const operaciones = await NubeOperacion.findAll({
+        where,
+        include: [
+          {
+            model: NubePerforacionHorizontal,
+            as: 'perforaciones_horizontal'
+          }
+        ],
+        order: [['fecha', 'DESC']],
+        limit: parseInt(limit),
+        offset
+      });
+
+      allData = allData.concat(operaciones);
+      await delay(100);
+    }
+
+    return res.status(200).json(allData);
+
+  } catch (error) {
+    console.error('❌ Error al obtener operaciones horizontales PLAN:', error);
+    return res.status(500).json({
+      error: 'Error al obtener operaciones horizontales',
+      details: error.message
+    });
+  }
 }
 
 //SOSTENIMIENTO---------------------------------------------------------
@@ -633,4 +812,91 @@ async function obtenerOperacionesSostenimiento(req, res) {
     }
 }
 
-module.exports = { crearOperacionLargo,actualizarOperacionLargo, obtenerOperacionesLargo, crearOperacionHorizontal,actualizarOperacionHorizontal, obtenerOperacionesHorizontal, crearOperacionSostenimiento, actualizarOperacionSostenimiento, obtenerOperacionesSostenimiento  };
+async function obtenerOperacionesSostenimientoPlan(req, res) {
+  try {
+    const { mes, anio, limit = 100 } = req.query;
+
+    const mesesMap = {
+      ENERO: 1, FEBRERO: 2, MARZO: 3, ABRIL: 4, MAYO: 5, JUNIO: 6,
+      JULIO: 7, AGOSTO: 8, SEPTIEMBRE: 9, SETIEMBRE: 9, OCTUBRE: 10, NOVIEMBRE: 11, DICIEMBRE: 12
+    };
+
+    // Filtro base: solo sostenimiento
+    const where = {
+      tipo_operacion: 'SOSTENIMIENTO'
+    };
+
+    // Filtro por año
+    if (anio) {
+      where.fecha = sequelize.where(
+        sequelize.fn('YEAR', sequelize.col('fecha')),
+        anio
+      );
+    }
+
+    // Filtro por mes
+    if (mes) {
+      const mesNum = mesesMap[mes.toUpperCase()];
+      if (mesNum) {
+        if (anio) {
+          // Año + mes
+          where[Op.and] = [
+            sequelize.where(
+              sequelize.fn('YEAR', sequelize.col('fecha')),
+              anio
+            ),
+            sequelize.where(
+              sequelize.fn('MONTH', sequelize.col('fecha')),
+              mesNum
+            ),
+            { tipo_operacion: 'SOSTENIMIENTO' }
+          ];
+          delete where.fecha; // ya usamos YEAR/MONTH en el AND
+        } else {
+          // Solo mes
+          where.fecha = sequelize.where(
+            sequelize.fn('MONTH', sequelize.col('fecha')),
+            mesNum
+          );
+        }
+      }
+    }
+
+    const total = await NubeOperacion.count({ where });
+    const totalPages = Math.ceil(total / limit);
+    let allData = [];
+    const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+    for (let page = 1; page <= totalPages; page++) {
+      const offset = (page - 1) * limit;
+
+      const operaciones = await NubeOperacion.findAll({
+        where,
+        include: [
+          {
+            model: NubeSostenimiento,
+            as: 'sostenimientos'
+          }
+        ],
+        order: [['fecha', 'DESC']],
+        limit: parseInt(limit),
+        offset
+      });
+
+      allData = allData.concat(operaciones);
+      await delay(100);
+    }
+
+    return res.status(200).json(allData);
+
+  } catch (error) {
+    console.error('❌ Error al obtener operaciones de sostenimiento PLAN:', error);
+    return res.status(500).json({
+      error: 'Error al obtener operaciones de sostenimiento',
+      details: error.message
+    });
+  }
+}
+
+
+module.exports = { obtenerOperacionesSostenimientoPlan, obtenerOperacionesHorizontalPlan, obtenerOperacionesLargoPlan, crearOperacionLargo,actualizarOperacionLargo, obtenerOperacionesLargo, crearOperacionHorizontal,actualizarOperacionHorizontal, obtenerOperacionesHorizontal, crearOperacionSostenimiento, actualizarOperacionSostenimiento, obtenerOperacionesSostenimiento  };
