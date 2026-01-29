@@ -304,6 +304,38 @@ async function obtenerOperacionesLargoPlan(req, res) {
   }
 }
 
+async function obtenerUltimaOperacionTaladroLargo(req, res) {
+    try {
+        const operacion = await NubeOperacion.findOne({
+            where: {
+                tipo_operacion: 'PERFORACIÓN TALADROS LARGOS',
+                estado: 'cerrado'
+            },
+            include: [
+                {
+                    model: NubeHorometros,
+                    as: 'horometros'
+                }
+            ],
+            order: [
+                ['fecha', 'DESC'],      // 🔑 fecha real de la operación
+                ['createdAt', 'DESC']   // respaldo por inserción
+            ]
+        });
+
+        if (!operacion) {
+            return res.status(404).json({
+                message: 'No existe una operación cerrada de PERFORACIÓN TALADROS LARGOS'
+            });
+        }
+
+        res.status(200).json(operacion);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+
 
 //HORIZONTAL-----------------------------------------------------------
 async function crearOperacionHorizontal(req, res) {
@@ -602,6 +634,37 @@ async function obtenerOperacionesHorizontalPlan(req, res) {
   }
 }
 
+async function obtenerUltimaOperacionTaladroHorizontal(req, res) {
+    try {
+        const operacion = await NubeOperacion.findOne({
+            where: {
+                tipo_operacion: 'PERFORACIÓN HORIZONTAL',
+                estado: 'cerrado'
+            },
+            include: [
+                {
+                    model: NubeHorometros,
+                    as: 'horometros'
+                }
+            ],
+            order: [
+                ['fecha', 'DESC'],      // 🔑 fecha real de la operación
+                ['createdAt', 'DESC']   // respaldo por inserción
+            ]
+        });
+
+        if (!operacion) {
+            return res.status(404).json({
+                message: 'No existe una operación cerrada de PERFORACIÓN TALADROS LARGOS'
+            });
+        }
+
+        res.status(200).json(operacion);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
 //SOSTENIMIENTO---------------------------------------------------------
 async function crearOperacionSostenimiento(req, res) {
     const t = await sequelize.transaction();
@@ -898,5 +961,36 @@ async function obtenerOperacionesSostenimientoPlan(req, res) {
   }
 }
 
+async function obtenerUltimaOperacionTaladroSostenimiento(req, res) {
+    try {
+        const operacion = await NubeOperacion.findOne({
+            where: {
+                tipo_operacion: 'SOSTENIMIENTO',
+                estado: 'cerrado'
+            },
+            include: [
+                {
+                    model: NubeHorometros,
+                    as: 'horometros'
+                }
+            ],
+            order: [
+                ['fecha', 'DESC'],      // 🔑 fecha real de la operación
+                ['createdAt', 'DESC']   // respaldo por inserción
+            ]
+        });
 
-module.exports = { obtenerOperacionesSostenimientoPlan, obtenerOperacionesHorizontalPlan, obtenerOperacionesLargoPlan, crearOperacionLargo,actualizarOperacionLargo, obtenerOperacionesLargo, crearOperacionHorizontal,actualizarOperacionHorizontal, obtenerOperacionesHorizontal, crearOperacionSostenimiento, actualizarOperacionSostenimiento, obtenerOperacionesSostenimiento  };
+        if (!operacion) {
+            return res.status(404).json({
+                message: 'No existe una operación cerrada de PERFORACIÓN TALADROS LARGOS'
+            });
+        }
+
+        res.status(200).json(operacion);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+
+module.exports = { obtenerUltimaOperacionTaladroLargo, obtenerUltimaOperacionTaladroSostenimiento,  obtenerOperacionesSostenimientoPlan, obtenerOperacionesHorizontalPlan, obtenerOperacionesLargoPlan, crearOperacionLargo,actualizarOperacionLargo, obtenerOperacionesLargo, crearOperacionHorizontal,actualizarOperacionHorizontal, obtenerOperacionesHorizontal, obtenerUltimaOperacionTaladroHorizontal, crearOperacionSostenimiento, actualizarOperacionSostenimiento, obtenerOperacionesSostenimiento  };
