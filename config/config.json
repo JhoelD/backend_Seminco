@@ -1,10 +1,10 @@
 {
   "development": {
-    "username": "uqkfglsowiczp781",
-    "password": "mUZzIHhtwNLUMqvbC9F",
-    "database": "byr3ky7itnxedkaxvxgb",
-    "host": "byr3ky7itnxedkaxvxgb-mysql.services.clever-cloud.com",
-    "port": 20939,
+    "username": "ueve6pndghbylw3x",
+    "password": "ueve6pndghbylw3x",
+    "database": "bbspfypkiyahvwfzcftn",
+    "host": "bbspfypkiyahvwfzcftn-mysql.services.clever-cloud.com",
+    "port": 3306,
     "dialect": "mysql"
   },
   "test": {
