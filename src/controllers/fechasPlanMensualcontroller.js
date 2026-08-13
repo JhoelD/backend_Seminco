@@ -44,14 +44,22 @@ const createFecha = async (req, res) => {
     const { mes } = req.body;
 
     if (!mes) {
-      return res.status(400).json({ error: "El campo 'mes' es obligatorio" });
+      return res.status(400).json({
+        error: "El campo 'mes' es obligatorio"
+      });
     }
 
     const nuevaFecha = await FechasPlanMensual.create({ mes });
+
     res.status(201).json(nuevaFecha);
+
   } catch (error) {
-    console.error("Error al crear la fecha:", error); // 🛠️ Muestra el error en la consola
-    res.status(400).json({ error: "Error al crear la fecha", detalle: error.message });
+    console.error("Error al crear la fecha:", error);
+
+    res.status(400).json({
+      error: "Error al crear la fecha",
+      detalle: error.message
+    });
   }
 };
 

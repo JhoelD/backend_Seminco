@@ -17,6 +17,11 @@ const FechasPlanMensual = sequelize.define("Fechas_plan_mensual", {
     allowNull: false,
     defaultValue: DataTypes.NOW, // Guarda la fecha actual por defecto
   },
+  anio: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  
 }, {
   timestamps: false, // No agrega 'createdAt' ni 'updatedAt'
   tableName: "fechas_plan_mensual",
