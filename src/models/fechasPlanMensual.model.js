@@ -19,10 +19,10 @@ const FechasPlanMensual = sequelize.define("Fechas_plan_mensual", {
   },
   anio: {
   type: DataTypes.INTEGER,
-  allowNull: false,
-  defaultValue: sequelize.literal('(YEAR(CURRENT_DATE))')
+  allowNull: true,
+  defaultValue: undefined
 }
-
+  
 }, {
   timestamps: false, // No agrega 'createdAt' ni 'updatedAt'
   tableName: "fechas_plan_mensual",
