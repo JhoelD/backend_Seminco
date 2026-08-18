@@ -38,7 +38,7 @@ const IngresoAceros = sequelize.define('IngresoAceros', {
     envio: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: false
+        defaultValue: true
     }
 }, {
     tableName: 'Ingreso_Aceros',

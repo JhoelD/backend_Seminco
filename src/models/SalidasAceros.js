@@ -54,7 +54,7 @@ const SalidasAceros = sequelize.define('SalidasAceros', {
     envio: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        defaultValue: false
+        defaultValue: true
     }
 }, {
     tableName: 'Salidas_Aceros',
