@@ -38,6 +38,7 @@ const SalidasAceros = require('../routes/api/salidasAceros');
 const Carguio = require('../routes/api/carguioRoutes');
 const tipoAceroRoutes = require('../routes/api/tipoAceroRoutes');
 const PlanMantenimiento = require('../routes/api/planMantenimientoRoutes');
+const carpetaRoutes = require('../routes/api/carpetaRoutes');
 
 router.use('/usuarios', usuariosRoutes);  
 router.use('/auth', authRoutes);  
@@ -75,5 +76,6 @@ router.use('/salida-aceros', SalidasAceros);
 router.use('/carguio', Carguio); 
 router.use('/tipo-aceros', tipoAceroRoutes); 
 router.use('/PlanMantenimiento', PlanMantenimiento); 
+router.use('/carpetas', carpetaRoutes); 
 
 module.exports = router;

@@ -28,4 +28,9 @@ const Pdf = sequelize.define('Pdf', {
     timestamps: true
 });
 
+// Asociaciones
+const Carpeta = require('./Carpeta');
+Pdf.belongsTo(Carpeta, { foreignKey: 'carpeta_id', as: 'carpeta' });
+Carpeta.hasMany(Pdf, { foreignKey: 'carpeta_id', as: 'pdfs' });
+
 module.exports = Pdf;
