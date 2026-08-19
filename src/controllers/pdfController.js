@@ -44,7 +44,15 @@ exports.getPdfsPorCarpeta = [
 // POST - Crear PDF
 exports.createPdf = [
     verificarToken,
-    uploadPdf.single('archivo'),
+    (req, res, next) => {
+        uploadPdf.single('archivo')(req, res, (err) => {
+            if (err) {
+                console.error('Error en upload:', err);
+                return res.status(500).json({ error: 'Error al subir el archivo', details: err.message || err });
+            }
+            next();
+        });
+    },
     async (req, res) => {
         if (!req.file) {
             return res.status(400).json({ error: 'Debe subir un archivo PDF' });
@@ -76,7 +84,15 @@ exports.createPdf = [
 // PUT - Actualizar un PDF
 exports.updatePdf = [
     verificarToken,
-    uploadPdf.single('archivo'),
+    (req, res, next) => {
+        uploadPdf.single('archivo')(req, res, (err) => {
+            if (err) {
+                console.error('Error en upload:', err);
+                return res.status(500).json({ error: 'Error al subir el archivo', details: err.message || err });
+            }
+            next();
+        });
+    },
     async (req, res) => {
         const { id } = req.params;
         const { nombre, carpeta_id } = req.body;
