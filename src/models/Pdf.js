@@ -7,36 +7,25 @@ const Pdf = sequelize.define('Pdf', {
         primaryKey: true,
         autoIncrement: true
     },
-    proceso: {
-        type: DataTypes.STRING(100), // Longitud adecuada para nombres de procesos
-        allowNull: false
-    },
-    mes: {
-        type: DataTypes.ENUM(
-            'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
-            'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
-        ),
+    nombre: {
+        type: DataTypes.STRING(150),
         allowNull: false
     },
     url_pdf: {
-        type: DataTypes.STRING(255), // Longitud estándar para URLs
+        type: DataTypes.STRING(500),
         allowNull: false
     },
-    tipo_labor: {
-        type: DataTypes.TEXT,
-        allowNull: true // Cambia a false si es requerido
-    },
-    labor: {
-        type: DataTypes.TEXT,
-        allowNull: true // Cambia a false si es requerido
-    },
-    ala: {
-        type: DataTypes.TEXT,
-        allowNull: true // Cambia a false si es requerido
+    carpeta_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'carpetas',
+            key: 'id'
+        }
     }
 }, {
     tableName: 'pdfs',
-    timestamps: true // Añade createdAt y updatedAt
+    timestamps: true
 });
 
 module.exports = Pdf;
